@@ -1,0 +1,30 @@
+export default interface Visitor<T> {
+    visitNum(node: Num): T;
+    visitChar(node:Char): T;
+    visitId(node:Id): T;
+    visitNot(node:Not): T;
+    visitGreaterThan(node: GreaterThan): T;
+    visitLessThan(node: LessThan): T;
+    visitGreaterThanEqual(node: GreaterThanEqual): T;
+    visitLessThanEqual(node: LessThanEqual): T;
+    visitEqual(node:Equal): T;
+    visitNotEqual(node: NotEqual): T;
+    visitAdd(node:Add): T;
+    visitSubtract(node:Subtract): T;
+    visitMultiply(node:Multiply): T;
+    visitDivide(node:Divide): T;
+    visitCall(node:Call): T;
+    visitReturn(node:Return): T;
+    visitBlock(node:Block): T;
+    visitIf(node:If): T;
+    visitFunc(node:Func): T;
+    visitVar(node:Var): T;
+    visitAssign(node:Assign): T;
+    visitWhile(node:While): T;
+    visitBoolean(node:Bool): T;
+    visitUndefined(node:Undefined): T;
+    visitNull(node:Null): T;
+    visitArrayLiteral(node: ArrayLiteral): T;
+    visitArrayLookup(node: ArrayLookup): T;
+    visitLength(node: Length): T;
+}
