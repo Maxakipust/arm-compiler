@@ -1,0 +1,43 @@
+function printNum(num:number): void{
+    putchar(num+48);
+}
+function printBool(bool:boolean): void{
+    if(bool){
+        putchar('t');
+        putchar('r');
+        putchar('u');
+        putchar('e');
+        return;
+    }
+    putchar('f');
+    putchar('a');
+    putchar('l');
+    putchar('s');
+    putchar('e');
+}
+
+function mod(num: number, mod: number): number{
+    return num - ((num / mod) * mod);
+}
+
+function isPrime(num: number): boolean {
+    var i = 2;
+    while(i < num){
+        if( mod(num, i) == 0){
+            return false;
+        }
+        i = i + 1;
+    }
+    return num > 1;
+}
+
+function main(): void {
+    var i = 0;
+    while(i<10){
+        printNum(i);
+        putchar(':');
+        printBool(isPrime(i));
+        putchar(10);
+        i = i + 1;
+    }
+}

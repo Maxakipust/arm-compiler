@@ -1,6 +1,4 @@
-import { constants } from "buffer";
-
-let emit = console.log;
+import fs, { write } from "fs"
 
 interface AST {
     visit<T>(v: Visitor<T>): T;
@@ -1206,7 +1204,7 @@ let product = infix(STAR.or(SLASH), unary);
 // sum <- product ((PLUS / MINUS) product)*
 let sum = infix(PLUS.or(MINUS), product);
 
-// comparison <- sum ((EQUAL / NOT_EQUAL) sum)*
+// comparison <- sum ((EQUAL / NOT_EQUAL / GREATER_THAN_EQUAL / LESS_THAN_EQUAL / GREATER_THAN / LESS_THAN) sum)*
 let comparison = infix(EQUAL.or(NOT_EQUAL).or(GREATER_THAN_EQUAL).or(LESS_THAN_EQUAL).or(GREATER_THAN).or(LESS_THAN), sum);
 
 expression.parse = comparison.parse;
@@ -1307,55 +1305,18 @@ let statementParser: Parser<AST> = returnStatement
 statement.parse = statementParser.parse;
 
 let parser: Parser<AST> =
-    ignored.and(Parser.zeroOrMore(statement)).map((statements)=>
+    ignored.and(Parser.zeroOrMore(functionStatement)).map((statements)=>
         new Block(statements)
     );
 
-let ast = parser.parseStringToCompletion(`
-function printNum(num:number): void{
-    putchar(num+48);
-}
-function printBool(bool:boolean): void{
-    if(bool){
-        putchar('t');
-        putchar('r');
-        putchar('u');
-        putchar('e');
-        return;
-    }
-    putchar('f');
-    putchar('a');
-    putchar('l');
-    putchar('s');
-    putchar('e');
-}
+let filePath = process.argv[2];
+let fileContents = fs.readFileSync(filePath, 'utf8');
 
-function mod(num: number, mod: number): number{
-    return num - ((num / mod) * mod);
-}
+let outputPath = process.argv[3];
+let writeStream = fs.createWriteStream(outputPath);
+let emit = (data:string)=> writeStream.write(data+"\n", 'utf8');
 
-function isPrime(num: number): boolean {
-    var i = 2;
-    while(i < num){
-        if( mod(num, i) == 0){
-            return false;
-        }
-        i = i + 1;
-    }
-    return num > 1;
-}
-
-function main(): void {
-    var i = 0;
-    while(i<10){
-        printNum(i);
-        putchar(':');
-        printBool(isPrime(i));
-        putchar(10);
-        i = i + 1;
-    }
-}
-`);
+let ast = parser.parseStringToCompletion(fileContents);
 let globals = new Map<string, FunctionType>();
 globals.set("putchar", new FunctionType([new Param("x0", new NumberType())], new VoidType()));
 
