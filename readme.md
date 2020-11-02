@@ -5,7 +5,7 @@ It is pretty heavily based on the compiler from [this](https://keleshev.com/comp
 ### Running
 It will output the assembly to stdout so in order to run everything use the following (or use the make file):
 ```
-ts-node src/index.ts > output/output.s
+ts-node src/index.ts examples/example.idk output/output.s
 gcc -g -march=armv8-a output/output.s -o output/output
 ./output/output
 ```
