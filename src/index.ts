@@ -4,8 +4,6 @@ import { FunctionType, NumberType, Param, VoidType } from "./type";
 import TypeChecker from './typeChecker'
 import CodeGenerator from './codeGenerator'
 
-
-
 let filePath = process.argv[2];
 let fileContents = fs.readFileSync(filePath, 'utf8');
 
