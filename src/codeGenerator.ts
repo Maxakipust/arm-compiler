@@ -1,8 +1,10 @@
 import Visitor from './visitor'
 import * as AST from './ast'
+import * as Type from './type'
 
 export default class CodeGenerator implements Visitor<void> {
     constructor(public locals: Map<String, number> = new Map(), public nextLocalOffset: number = 0, public emit: (data: string)=>void ) {}
+
 
     visitNum(node: AST.Num){
         this.emit(`    ldr r0, =${node.value}`);
@@ -82,13 +84,15 @@ export default class CodeGenerator implements Visitor<void> {
         
     }
     visitAdd(node:AST.Add){
+        if(node.left.returnType.equals(new Type.NumberType())){
             node.left.visit(this);
             this.emit(`    push {r0, ip}`);
             node.right.visit(this);
             this.emit(`    pop {r1, ip}`);
             this.emit(`    add r0, r1, r0`);
-        
-    
+        }else if(node.left.returnType instanceof Type.ArrayType) {
+
+        }
     }
     visitSubtract(node:AST.Subtract){
             node.left.visit(this);
@@ -222,6 +226,20 @@ export default class CodeGenerator implements Visitor<void> {
             this.emit(`${loopEnd}:`);
         
     }
+    visitFor(node:AST.For){
+	    let loopStart = new Label();
+	    let loopEnd = new Label();
+
+	    node.init.visit(this);
+	    this.emit(`${loopStart}`);
+	    node.condition.visit(this);
+	    this.emit(`    cmp r0, #0`);
+	    this.emit(`    beq ${loopEnd}`);
+	    node.body.visit(this);
+	    node.itterator.visit(this);
+	    this.emit(`    b ${loopStart}`);
+	    this.emit(`${loopEnd}`);
+    }
     visitBoolean(node:AST.Bool){
             if(node.value) {
                 this.emit(`    mov r0, #1`);
@@ -239,20 +257,56 @@ export default class CodeGenerator implements Visitor<void> {
     }
     visitArrayLiteral(node: AST.ArrayLiteral){
             let length = node.elements.length;
-            this.emit(`    ldr r0, =${4 * (length + 1)}`);
-            this.emit(`    bl malloc`);
-            this.emit(`    push {r4, ip}`);
-            this.emit(`    mov r4, r0`);
-            this.emit(`    ldr r0, =${length}`);
-            this.emit(`    str r0, [r4]`);
+            this.emit(`    ldr r0, =${4 * (length + 1)}`); //put the size of the array in bytes into r0
+            this.emit(`    bl malloc`); // malloc the array, the pointer goes into r0
+            this.emit(`    push {r4, ip}`); // save r4
+            this.emit(`    mov r4, r0`); // move the pointer for the array into r4
+            this.emit(`    ldr r0, =${length}`); //load the length of the array into r0
+            this.emit(`    str r0, [r4]`); // store the length of the array into the memory location of r4
             node.elements.forEach((element, i ) => {
-                element.visit(this);
-                this.emit(`    str r0, [r4, #${4 * (i + 1)}]`);
+                element.visit(this); // load the value of each element into r0
+                this.emit(`    str r0, [r4, #${4 * (i + 1)}]`); // store r0 into r4 + offset
             });
-            this.emit(`    mov r0, r4`);
-            this.emit(`    pop {r4, ip}`);
-        
+            this.emit(`    mov r0, r4`); //move the pointer for the array into r0
+            this.emit(`    pop {r4, ip}`); //restore r4
     }
+
+    visitEmptyArray(node: AST.EmptyArray): void {
+        node.size.visit(this); //put the length of the aray into r0
+        this.emit(`    push {r3, ip}`); // save r3
+        this.emit(`    mov r3, r0`); //move the length of the array into r3
+        this.emit(`    add r0, r0, #1`); 
+        this.emit(`    lsl r0, #2`); //calculate the size of the array
+        this.emit(`    push {r3, ip}`);
+        this.emit(`    bl malloc`); //malloc the size of the array
+        this.emit(`    pop {r3, ip}`);
+        this.emit(`    push {r4, ip}`); //save r4
+        this.emit(`    mov r4, r0`); //move the pointer for the array into r4
+        this.emit(`    str r3, [r4]`); //store the length of the array into the memory location of r4
+        // node.elements.forEach((element, i ) => {
+        //     element.visit(this);
+        //     this.emit(`    str r0, [r4, #${4 * (i + 1)}]`);
+        // });
+        this.emit(`    mov r0, r4`); //move the pointer for the array into r0
+        this.emit(`    pop {r4, ip}`); //restore r4
+        this.emit(`    pop {r3, ip}`); //restore r3
+    }
+
+    visitArrayAssignment(node: AST.ArrayAssignment): void {
+        node.value.visit(this);
+        this.emit(`    push {r0, ip}`)
+        node.array.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.index.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    pop {r2, ip}`);
+        this.emit(`    ldr r3, [r1]`);
+        this.emit(`    cmp r0, r3`);
+        this.emit(`    addlo r1, r1, #4`);
+        this.emit(`    lsllo r0, r0, #2`);
+        this.emit(`    strlo r2, [r1, r0]`);
+    }
+
     visitArrayLookup(node: AST.ArrayLookup){
             node.array.visit(this);
             this.emit(`    push {r0, ip}`);
@@ -269,7 +323,22 @@ export default class CodeGenerator implements Visitor<void> {
     visitLength(node: AST.Length){
             node.array.visit(this);
             this.emit(`    ldr r0, [r0, #0]`);
-        
+    }
+    visitStr(node: AST.Str) {
+        let length = node.value.length;
+        this.emit(`    ldr r0, =${4 * (length + 1)}`);
+        this.emit(`    bl malloc`);
+        this.emit(`    push {r4, ip}`);
+        this.emit(`    mov r4, r0`);
+        this.emit(`    ldr r0, =${length}`);
+        this.emit(`    str r0, [r4]`);
+        for(var i = 0; i<length; i++){
+            var charCode = node.value.charCodeAt(i);
+            this.emit(`    ldr r0, =${charCode}`);
+            this.emit(`    str r0, [r4, #${4 * (i + 1)}]`);
+        }
+        this.emit(`    mov r0, r4`);
+        this.emit(`    pop {r4, ip}`);
     }
 }
 

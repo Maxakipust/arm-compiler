@@ -116,6 +116,7 @@ let ELSE = token(/else\b/y);
 let RETURN = token(/return\b/y);
 let VAR = token(/var\b/y);
 let WHILE = token(/while\b/y);
+let FOR = token(/for\b/y);
 
 let ARRAY_TYPE = token(/Array\b/y);
 let VOID_TYPE = token(/void\b/y).map((_)=> new Type.VoidType());
@@ -140,6 +141,7 @@ let TRUE = token(/true\b/y).map((_)=> new AST.Bool(true));
 let FALSE = token(/false\b/y).map((_)=> new AST.Bool(false));
 let boolean: Parser<AST.AST> = TRUE.or(FALSE);
 
+let STRING = token(/".*"/y).map((string)=> new AST.Str(string.substring(1, string.length-1)))
 let CHAR = token(/['].[']/y).map((chars) => new AST.Char(chars.charAt(1)));
 let NUMBER = token(/[0-9]+/y).map((digits) => new AST.Num(parseInt(digits)));
 let ID = token(/[a-zA-Z_][a-zA-Z0-9_]*/y);
@@ -183,14 +185,6 @@ let call: Parser<AST.AST> =
         ))
     );
 
-//arrayLiteral <- LEFT_BRACKET args RIGHT_BRACKET
-let arrayLiteral: Parser<AST.AST> = 
-    LEFT_BRACKET.and(args.bind((args)=>
-        RIGHT_BRACKET.and(Parser.constant(
-            new AST.ArrayLiteral(args)
-        ))
-    ));
-
 //arrayLookup <-ID LEFT_BRACKET expression RIGHT_BRACKET
 let arrayLookup: Parser<AST.AST> = 
     id.bind((array)=>
@@ -213,13 +207,30 @@ let typeParser: Parser<Type.Type> = VOID_TYPE.or(BOOLEAN_TYPE).or(NUMBER_TYPE).o
 //type <- VOID | BOOLEAN | NUMBER | arrayType
 type.parse = typeParser.parse;
 
+//arrayLiteral <-  LEFT_BRACKET RIGHT_BRACKET LEFT_BRACE args RIGHT_BRACE
+let arrayLiteral: Parser<AST.AST> = 
+    LEFT_BRACKET.and(RIGHT_BRACKET).and(LEFT_BRACE).and(args.bind((args)=>
+        RIGHT_BRACE.and(Parser.constant(
+            new AST.ArrayLiteral(args)
+        ))
+    ));
+
+// emptyArray <- LEFT_BRACKET number type RIGHT_BRACKET
+let emptyArray: Parser<AST.AST> = LEFT_BRACKET.and(expression.bind((size)=>
+    type.bind((type)=>
+        RIGHT_BRACKET.and(Parser.constant(
+            new AST.EmptyArray(size, type)
+        ))
+    )
+))
+
 
 //scalar <- boolean / NUMBER / CHAR / UNDEFINED / NULL / id
-let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(UNDEFINED).or(NULL).or(id);
+let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(UNDEFINED).or(NULL).or(id);
 
 // atom <-call / arrayLiteral / arrayLookup / scalar / LEFT_PAREN expression RIGHT_PAREN
 let atom: Parser<AST.AST> =
-    call.or(arrayLiteral).or(arrayLookup).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
+    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
         RIGHT_PAREN.and(Parser.constant(e))
     ));
 
@@ -279,6 +290,8 @@ let whileStatement: Parser<AST.AST> = WHILE.and(LEFT_PAREN).and(expression).bind
     )
 );
 
+
+
 // varStatement <- VAR ID ASSIGN expression SEMICOLON
 let varStatement: Parser<AST.AST> = VAR.and(ID).bind((name)=>
     ASSIGN.and(expression).bind((value)=>
@@ -291,6 +304,14 @@ let assignmentStatement: Parser<AST.AST> = ID.bind((name)=>
     ASSIGN.and(expression).bind((value)=>
         SEMICOLON.and(Parser.constant(new AST.Assign(name, value)))
     )
+)
+
+let arrayAssignment: Parser<AST.AST> = id.bind((array)=>
+LEFT_BRACKET.and(expression.bind((index)=>
+    RIGHT_BRACKET.and(ASSIGN).and(expression).bind((value)=>
+        SEMICOLON.and(Parser.constant(new AST.ArrayAssignment(array, index, value)))
+    )
+))
 )
 
 // blockStatement <- LEFT_BRACE statement* RIGHT_BRACE
@@ -328,6 +349,19 @@ let functionStatement: Parser<AST.AST> = FUNCTION.and(ID).bind((name)=>
     )
 )
 
+let forInit: Parser<AST.AST> = varStatement.or(assignmentStatement).or(expression);
+
+// forStatement <- FOR LEFT_PAREN expression SEMICOLON expression SEMICOLON expression RIGHT_PAREN statement
+let forStatement: Parser<AST.AST> = FOR.and(LEFT_PAREN).and(forInit).bind((init)=>
+	SEMICOLON.and(expression).bind((condition)=>
+		SEMICOLON.and(forInit).bind((itterator)=>
+			RIGHT_PAREN.and(statement).bind((body)=>
+				Parser.constant(new AST.For(init,condition,itterator,body))
+			)
+		)
+	)
+)
+
 // statement <- returnStatement
 //            / ifStatement
 //            / whileStatement
@@ -336,6 +370,7 @@ let functionStatement: Parser<AST.AST> = FUNCTION.and(ID).bind((name)=>
 //            / blockStatement
 //            / functionStatement
 //            / expressionStatement
+//            / forStatement
 
 let statementParser: Parser<AST.AST> = returnStatement
     .or(functionStatement)
@@ -343,8 +378,10 @@ let statementParser: Parser<AST.AST> = returnStatement
     .or(whileStatement)
     .or(varStatement)
     .or(assignmentStatement)
+    .or(arrayAssignment)
     .or(blockStatement)
-    .or(expressionStatement);
+    .or(expressionStatement)
+    .or(forStatement);
 statement.parse = statementParser.parse;
 
 let parser: Parser<AST.AST> =

@@ -3,6 +3,7 @@ import parser from './parser'
 import { FunctionType, NumberType, Param, VoidType } from "./type";
 import TypeChecker from './typeChecker'
 import CodeGenerator from './codeGenerator'
+let globalStart = new Date();
 
 let filePath = process.argv[2];
 let fileContents = fs.readFileSync(filePath, 'utf8');
@@ -28,3 +29,6 @@ start = new Date();
 ast.visit(new CodeGenerator(new Map(), 0, emit));
 end = new Date();
 console.log(`Code generation finished in ${end.getMilliseconds() - start.getMilliseconds()}ms`);
+
+let globalFinished = new Date();
+console.log(`In total it took ${globalFinished.getMilliseconds() - globalStart.getMilliseconds()}ms`);

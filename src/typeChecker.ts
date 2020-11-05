@@ -8,75 +8,105 @@ export default class TypeChecker implements Visitor<Type.Type> {
         public functions: Map<string, Type.FunctionType>,
         public currentFunctionReturnType: Type.Type | null
     ) {}
+    visitEmptyArray(node: AST.EmptyArray): Type.Type {
+        assertType(new Type.NumberType(), node.size.visit(this));
+        node.returnType = new Type.ArrayType(node.type);
+        return node.returnType;
+    }
+
+    visitArrayAssignment(node: AST.ArrayAssignment): Type.Type {
+        assertType(new Type.NumberType(), node.index.visit(this));
+        node.value.visit(this);
+        node.returnType = new Type.VoidType();
+        return node.returnType;
+    }
 
     visitNum(node: AST.Num): Type.Type {
-        return new Type.NumberType();
+        node.returnType = new Type.NumberType();
+        return node.returnType;
     }
     visitChar(node: AST.Char): Type.Type {
-        return new Type.NumberType();
+        node.returnType = new Type.NumberType();
+        return node.returnType;
     }
     visitId(node: AST.Id): Type.Type {
         let type = this.locals.get(node.value);
         if(!type){
             throw TypeError(`Undefined variable ${node.value}`);
         }
+        node.returnType = type;
         return type;
     }
     visitNot(node: AST.Not): Type.Type {
         assertType(new Type.BooleanType(), node.term.visit(this));
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitGreaterThan(node: AST.GreaterThan): Type.Type {
         assertType(new Type.NumberType(), node.left.visit(this));
         assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitLessThan(node: AST.LessThan): Type.Type {
         assertType(new Type.NumberType(), node.left.visit(this));
         assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitGreaterThanEqual(node: AST.GreaterThanEqual): Type.Type {
         assertType(new Type.NumberType(), node.left.visit(this));
         assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitLessThanEqual(node: AST.LessThanEqual): Type.Type {
         assertType(new Type.NumberType(), node.left.visit(this));
         assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitEqual(node: AST.Equal): Type.Type {
         let leftType = node.left.visit(this);
         let rightType = node.right.visit(this);
         assertType(leftType, rightType);
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitNotEqual(node: AST.NotEqual): Type.Type {
         let leftType = node.left.visit(this);
         let rightType = node.right.visit(this);
         assertType(leftType, rightType);
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitAdd(node: AST.Add): Type.Type {
-        assertType(new Type.NumberType(), node.left.visit(this));
-        assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.NumberType();
+        let leftType = node.right.visit(this);
+        let rightType = node.left.visit(this)
+        assertType(leftType, rightType);
+        if(! (leftType.equals(new Type.NumberType) || leftType instanceof Type.ArrayType)){
+            throw(TypeError(`Expected number or Array, but got ${leftType}`));
+        }
+        node.returnType = leftType;
+        return leftType;
     }
     visitSubtract(node: AST.Subtract): Type.Type {
         assertType(new Type.NumberType(), node.left.visit(this));
         assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.NumberType();
+        node.returnType = new Type.NumberType();
+        return node.returnType;
     }
     visitMultiply(node: AST.Multiply): Type.Type {
         assertType(new Type.NumberType(), node.left.visit(this));
         assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.NumberType();
+        node.returnType = new Type.NumberType();
+        return node.returnType;
     }
     visitDivide(node: AST.Divide): Type.Type {
         assertType(new Type.NumberType(), node.left.visit(this));
         assertType(new Type.NumberType(), node.right.visit(this));
-        return new Type.NumberType();
+        node.returnType = new Type.NumberType();
+        return node.returnType;
     }
     visitCall(node: AST.Call): Type.Type {
         let expected = this.functions.get(node.callee);
@@ -89,26 +119,30 @@ export default class TypeChecker implements Visitor<Type.Type> {
         )
         let got = new Type.FunctionType(argsTypes, expected.returnType);
         assertType(expected, got);
+        node.returnType = expected.returnType;
         return expected.returnType;
     }
     visitReturn(node: AST.Return): Type.Type {
         let type = node.term.visit(this);
         if(this.currentFunctionReturnType){
             assertType(this.currentFunctionReturnType, type);
-            return new Type.VoidType();
+            node.returnType = new Type.VoidType();
+            return node.returnType;
         }else{
             throw TypeError("Encountered return statement outside any function");
         }
     }
     visitBlock(node: AST.Block): Type.Type {
         node.statements.forEach((statement)=>statement.visit(this));
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitIf(node: AST.If): Type.Type {
         node.conditional.visit(this);
         node.consequence.visit(this);
         node.alternative.visit(this);
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitFunc(node: AST.Func): Type.Type {
         this.functions.set(node.name, node.signature);
@@ -122,12 +156,14 @@ export default class TypeChecker implements Visitor<Type.Type> {
             node.signature.returnType
         );
         node.body.visit(visitor);
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitVar(node: AST.Var): Type.Type {
         let type = node.value.visit(this);
         this.locals.set(node.name, type);
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitAssign(node: AST.Assign): Type.Type {
         let variableType = this.locals.get(node.name);
@@ -136,21 +172,34 @@ export default class TypeChecker implements Visitor<Type.Type> {
         }
         let valueType = node.value.visit(this);
         assertType(variableType, valueType);
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitWhile(node: AST.While): Type.Type {
         node.conditional.visit(this);
         node.body.visit(this);
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
+    }
+    visitFor(node: AST.For): Type.Type {
+        node.init.visit(this);
+        node.condition.visit(this);
+        node.itterator.visit(this);
+        node.body.visit(this);
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitBoolean(node: AST.Bool): Type.Type {
-        return new Type.BooleanType();
+        node.returnType = new Type.BooleanType();
+        return node.returnType;
     }
     visitUndefined(node: AST.Undefined): Type.Type {
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitNull(node: AST.Null): Type.Type {
-        return new Type.VoidType();
+        node.returnType = new Type.VoidType();
+        return node.returnType;
     }
     visitArrayLiteral(node: AST.ArrayLiteral): Type.Type {
         if(node.elements.length == 0){
@@ -161,12 +210,14 @@ export default class TypeChecker implements Visitor<Type.Type> {
             assertType(prev, next);
             return prev;
         });
-        return new Type.ArrayType(elementType);
+        node.returnType = new Type.ArrayType(elementType);
+        return node.returnType;
     }
     visitArrayLookup(node: AST.ArrayLookup): Type.Type {
         assertType(new Type.NumberType(), node.index.visit(this));
         let type = node.array.visit(this);
         if(type instanceof Type.ArrayType){
+            node.returnType = type.element;
             return type.element;
         }else{
             throw TypeError(`Expected an array, but got ${type}`);
@@ -175,10 +226,16 @@ export default class TypeChecker implements Visitor<Type.Type> {
     visitLength(node: AST.Length): Type.Type {
         let type = node.array.visit(this);
         if(type instanceof Type.ArrayType){
-            return new Type.NumberType();
+            node.returnType = new Type.NumberType();
+            return node.returnType;
         }else{
             throw TypeError(`Expected an array, but got ${type}`);
         }
+    }
+
+    visitStr(node: AST.Str): Type.Type {
+        node.returnType = new Type.ArrayType(new Type.NumberType);
+        return node.returnType;
     }
 }
 

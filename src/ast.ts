@@ -1,14 +1,30 @@
-import { FunctionType } from "./type";
+import { FunctionType, Type } from "./type";
 import Visitor from "./visitor";
 
 export interface AST {
+    returnType: Type;
+
     visit<T>(v: Visitor<T>): T;
     equals(other: AST): boolean;
 }
 
+export class Str implements AST {
+    constructor(public value: string){}
+    returnType: Type;
+
+    visit<T>(v:Visitor<T>){
+        return v.visitStr(this);
+    }
+
+    equals(other: AST): boolean {
+        return other instanceof Str &&
+            other.value === this.value;
+    }
+}
 
 export class Num implements AST {
     constructor(public value: number) { }
+    returnType: Type;
 
     visit<T>(v:Visitor<T>){
         return v.visitNum(this);
@@ -21,6 +37,7 @@ export class Num implements AST {
 
 export class Char implements AST {
     constructor(public value: string) {}
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
        return v.visitChar(this);
     }
@@ -34,6 +51,7 @@ export class Char implements AST {
 
 export class Id implements AST {
     constructor(public value: string) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitId(this);
     }
@@ -46,6 +64,7 @@ export class Id implements AST {
 
 export class Not implements AST {
     constructor(public term: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitNot(this);
     }
@@ -57,6 +76,7 @@ export class Not implements AST {
 
 export class GreaterThan implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitGreaterThan(this);
     }
@@ -71,6 +91,7 @@ export class GreaterThan implements AST {
 
 export class LessThan implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitLessThan(this);
     }
@@ -85,6 +106,7 @@ export class LessThan implements AST {
 
 export class GreaterThanEqual implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitGreaterThanEqual(this);
     }
@@ -99,6 +121,7 @@ export class GreaterThanEqual implements AST {
 
 export class LessThanEqual implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitLessThanEqual(this);
     }
@@ -113,6 +136,7 @@ export class LessThanEqual implements AST {
 
 export class Equal implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitEqual(this);
     }
@@ -127,6 +151,7 @@ export class Equal implements AST {
 
 export class NotEqual implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitNotEqual(this);
     }
@@ -141,6 +166,7 @@ export class NotEqual implements AST {
 
 export class Add implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitAdd(this);
     }
@@ -155,6 +181,7 @@ export class Add implements AST {
 
 export class Subtract implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitSubtract(this);
     }
@@ -169,6 +196,7 @@ export class Subtract implements AST {
 
 export class Multiply implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitMultiply(this);
     }
@@ -184,6 +212,7 @@ export class Multiply implements AST {
 
 export class Divide implements AST {
     constructor(public left: AST, public right: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitDivide(this);
     }
@@ -199,6 +228,7 @@ export class Divide implements AST {
 
 export class Call implements AST {
     constructor(public callee: string, public args: Array<AST>) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitCall(this);
     }
@@ -215,6 +245,7 @@ export class Call implements AST {
 
 export class Return implements AST {
     constructor(public term: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitReturn(this);
     }
@@ -227,6 +258,7 @@ export class Return implements AST {
 
 export class Block implements AST {
     constructor(public statements: Array<AST>) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitBlock(this);
     }
@@ -242,6 +274,7 @@ export class Block implements AST {
 
 export class If implements AST {
     constructor(public conditional: AST, public consequence: AST, public alternative: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitIf(this);
     }
@@ -256,6 +289,7 @@ export class If implements AST {
 
 export class Func implements AST {
     constructor(public name: string, public signature: FunctionType, public body: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitFunc(this);
     }
@@ -270,6 +304,7 @@ export class Func implements AST {
 
 export class Var implements AST {
     constructor(public name: string, public value: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitVar(this);
     }
@@ -284,6 +319,7 @@ export class Var implements AST {
 
 export class Assign implements AST {
     constructor(public name: string, public value: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitAssign(this);
     }
@@ -297,6 +333,7 @@ export class Assign implements AST {
 
 export class While implements AST {
     constructor(public conditional: AST, public body: AST) { }
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitWhile(this);
     }
@@ -308,8 +345,31 @@ export class While implements AST {
     }
 }
 
+export class For implements AST {
+	constructor(
+		public init: AST, 
+		public condition: AST, 
+		public itterator: AST, 
+		public body: AST
+	) {}
+    returnType: Type;
+
+	visit<T>(v: Visitor<T>) : T {
+		return v.visitFor(this);
+	}
+
+	equals(other: AST): boolean {
+		return other instanceof For &&
+			this.init.equals(other.init) &&
+			this.condition.equals(other.condition) &&
+			this.itterator.equals(other.itterator) &&
+			this.body.equals(other.body);
+	}
+}
+
 export class Bool implements AST {
     constructor(public value: boolean) {}
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitBoolean(this);
     }
@@ -323,6 +383,7 @@ export class Bool implements AST {
 
 export class Undefined implements AST {
     constructor() {}
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitUndefined(this);
     }
@@ -334,6 +395,7 @@ export class Undefined implements AST {
 
 export class Null implements AST {
     constructor() {}
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitNull(this);
     }
@@ -345,6 +407,7 @@ export class Null implements AST {
 
 export class ArrayLiteral implements AST {
     constructor(public elements: Array<AST>) {}
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitArrayLiteral(this);
     }
@@ -356,21 +419,53 @@ export class ArrayLiteral implements AST {
     }
 }
 
+export class EmptyArray implements AST {
+    constructor(public size: AST, public type: Type) {}
+    returnType: Type;
+    visit<T>(v: Visitor<T>): T {
+        return v.visitEmptyArray(this);
+    }
+
+    equals(other: AST): boolean {
+        return other instanceof EmptyArray &&
+            other.size == this.size &&
+            other.type.equals(this.type);
+    }
+}
+
 export class ArrayLookup implements AST {
     constructor(public array: AST, public index: AST) {}
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitArrayLookup(this);
     }
 
     equals(other: AST): boolean {
         return other instanceof ArrayLookup &&
-            other.array === this.array &&
+            other.array.equals(this.array) &&
             other.index.equals(this.index);
+    }
+}
+
+export class ArrayAssignment implements AST {
+    constructor(public array: AST, public index: AST, public value: AST) {}
+    returnType: Type;
+
+    visit<T> (v: Visitor<T>): T {
+        return v.visitArrayAssignment(this);
+    }
+
+    equals(other: AST): boolean {
+        return other instanceof ArrayAssignment &&
+           other.array === this.array &&
+           other.index.equals(this.index) &&
+           other.value.equals(this.value) 
     }
 }
 
 export class Length implements AST {
     constructor(public array: AST) {}
+    returnType: Type;
     visit<T>(v: Visitor<T>): T {
         return v.visitLength(this);
     }
