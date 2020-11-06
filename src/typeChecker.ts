@@ -181,14 +181,6 @@ export default class TypeChecker implements Visitor<Type.Type> {
         node.returnType = new Type.VoidType();
         return node.returnType;
     }
-    visitFor(node: AST.For): Type.Type {
-        node.init.visit(this);
-        node.condition.visit(this);
-        node.itterator.visit(this);
-        node.body.visit(this);
-        node.returnType = new Type.VoidType();
-        return node.returnType;
-    }
     visitBoolean(node: AST.Bool): Type.Type {
         node.returnType = new Type.BooleanType();
         return node.returnType;

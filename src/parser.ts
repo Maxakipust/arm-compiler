@@ -349,19 +349,6 @@ let functionStatement: Parser<AST.AST> = FUNCTION.and(ID).bind((name)=>
     )
 )
 
-let forInit: Parser<AST.AST> = varStatement.or(assignmentStatement).or(expression);
-
-// forStatement <- FOR LEFT_PAREN expression SEMICOLON expression SEMICOLON expression RIGHT_PAREN statement
-let forStatement: Parser<AST.AST> = FOR.and(LEFT_PAREN).and(forInit).bind((init)=>
-	SEMICOLON.and(expression).bind((condition)=>
-		SEMICOLON.and(forInit).bind((itterator)=>
-			RIGHT_PAREN.and(statement).bind((body)=>
-				Parser.constant(new AST.For(init,condition,itterator,body))
-			)
-		)
-	)
-)
-
 // statement <- returnStatement
 //            / ifStatement
 //            / whileStatement
@@ -380,8 +367,7 @@ let statementParser: Parser<AST.AST> = returnStatement
     .or(assignmentStatement)
     .or(arrayAssignment)
     .or(blockStatement)
-    .or(expressionStatement)
-    .or(forStatement);
+    .or(expressionStatement);
 statement.parse = statementParser.parse;
 
 let parser: Parser<AST.AST> =

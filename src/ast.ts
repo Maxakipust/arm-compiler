@@ -345,28 +345,6 @@ export class While implements AST {
     }
 }
 
-export class For implements AST {
-	constructor(
-		public init: AST, 
-		public condition: AST, 
-		public itterator: AST, 
-		public body: AST
-	) {}
-    returnType: Type;
-
-	visit<T>(v: Visitor<T>) : T {
-		return v.visitFor(this);
-	}
-
-	equals(other: AST): boolean {
-		return other instanceof For &&
-			this.init.equals(other.init) &&
-			this.condition.equals(other.condition) &&
-			this.itterator.equals(other.itterator) &&
-			this.body.equals(other.body);
-	}
-}
-
 export class Bool implements AST {
     constructor(public value: boolean) {}
     returnType: Type;

@@ -226,20 +226,6 @@ export default class CodeGenerator implements Visitor<void> {
             this.emit(`${loopEnd}:`);
         
     }
-    visitFor(node:AST.For){
-	    let loopStart = new Label();
-	    let loopEnd = new Label();
-
-	    node.init.visit(this);
-	    this.emit(`${loopStart}`);
-	    node.condition.visit(this);
-	    this.emit(`    cmp r0, #0`);
-	    this.emit(`    beq ${loopEnd}`);
-	    node.body.visit(this);
-	    node.itterator.visit(this);
-	    this.emit(`    b ${loopStart}`);
-	    this.emit(`${loopEnd}`);
-    }
     visitBoolean(node:AST.Bool){
             if(node.value) {
                 this.emit(`    mov r0, #1`);

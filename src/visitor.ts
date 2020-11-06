@@ -23,7 +23,6 @@ export default interface Visitor<T> {
     visitVar(node: AST.Var): T;
     visitAssign(node: AST.Assign): T;
     visitWhile(node: AST.While): T;
-    visitFor(node: AST.For): T;   
     visitBoolean(node: AST.Bool): T;
     visitUndefined(node: AST.Undefined): T;
     visitNull(node: AST.Null): T;
