@@ -3,6 +3,9 @@ import parser from './parser'
 import { FunctionType, NumberType, Param, VoidType } from "./type";
 import TypeChecker from './typeChecker'
 import CodeGenerator from './codeGenerator'
+
+require('./tsParser');
+
 let globalStart = new Date();
 
 let filePath = process.argv[2];
