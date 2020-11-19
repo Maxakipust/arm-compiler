@@ -12,7 +12,6 @@ export class BooleanType implements Type {
     toString(): string {
         return "boolean";
     }
-
 }
 
 export class NumberType implements Type {
@@ -69,5 +68,15 @@ export class FunctionType implements Type {
     }
     toString(): string {
         return `(${this.parameters.map((param)=>param.toString()).join(', ')}) => ${this.returnType}`
+    }
+}
+
+export class ThreadType implements Type {
+    constructor() {}
+    equals(other:Type):boolean {
+        return other instanceof ThreadType;
+    }
+    toString(): string {
+        return `Thread`;
     }
 }

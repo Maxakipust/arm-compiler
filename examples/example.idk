@@ -7,41 +7,19 @@ function printLn(str: Array<number>): void {
     putchar(10);
 }
 
-function arrEq(a: Array<number>, b: Array<number>): boolean {
-    if(length(a) != length(b)){
-        return false;
+function test(): void {
+    printLn("before thread");
+    thread{
+        printLn("in thread");
     }
-    var i = 0;
-    while(i<length(a)){
-        if(a[i] != b[i]){
-            return false;
-        }else{
-            i = i + 1;
-        }
-    }
-    return true;
+    printLn("After thread");
 }
 
-function arrAdd(a: Array<number>, b: Array<number>):Array<number> {
-    var newArr = [length(a)+length(b) number];
-    var i = 0;
-    while(i<length(a)){
-        newArr[i] = a[i];
-        i = i + 1;
-    }
-    i = 0;
-    while(i<length(b)){
-        newArr[i+length(a)] = b[i];
-        i = i + 1;
-    }
-    return newArr;
-}
 
 function main(): number {
-    var a = "hello ";
-    var b = "world";
-    var c = arrAdd(a, b);
-    printLn(a);
-    printLn(b);
-    printLn(c);
+    printLn("Start main");
+    test();
+    printLn("End Main");
+
+    return 0;
 }

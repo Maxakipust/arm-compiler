@@ -1,0 +1,47 @@
+function printLn(str: Array<number>): void {
+    var index = 0;
+    while(index < length(str)){
+        putchar(str[index]);
+        index = index + 1;
+    }
+    putchar(10);
+}
+
+function arrEq(a: Array<number>, b: Array<number>): boolean {
+    if(length(a) != length(b)){
+        return false;
+    }
+    var i = 0;
+    while(i<length(a)){
+        if(a[i] != b[i]){
+            return false;
+        }else{
+            i = i + 1;
+        }
+    }
+    return true;
+}
+
+function arrAdd(a: Array<number>, b: Array<number>):Array<number> {
+    var newArr = [length(a)+length(b) number];
+    var i = 0;
+    while(i<length(a)){
+        newArr[i] = a[i];
+        i = i + 1;
+    }
+    i = 0;
+    while(i<length(b)){
+        newArr[i+length(a)] = b[i];
+        i = i + 1;
+    }
+    return newArr;
+}
+
+function main(): number {
+    thread{
+        printLn("Hello from child");
+    }
+    printLn("Hello from Parent");
+
+    return 0;
+}

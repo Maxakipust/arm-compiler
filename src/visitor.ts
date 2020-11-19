@@ -32,4 +32,5 @@ export default interface Visitor<T> {
     visitArrayAssignment(node: AST.ArrayAssignment): T;
     visitStr(node: AST.Str): T;
     visitEmptyArray(node: AST.EmptyArray): T;
+    visitThread(node: AST.Thread): T;
 }

@@ -19,6 +19,7 @@ console.log(`Parsing finished in ${end.getMilliseconds() - start.getMilliseconds
 
 let globals = new Map<string, FunctionType>();
 globals.set("putchar", new FunctionType([new Param("x0", new NumberType())], new VoidType()));
+globals.set("fork", new FunctionType([], new NumberType()));
 
 start = new Date();
 ast.visit(new TypeChecker(new Map(), globals, new VoidType()))

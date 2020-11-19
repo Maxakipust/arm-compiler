@@ -117,6 +117,7 @@ let RETURN = token(/return\b/y);
 let VAR = token(/var\b/y);
 let WHILE = token(/while\b/y);
 let FOR = token(/for\b/y);
+let THREAD = token(/thread\b/y);
 
 let ARRAY_TYPE = token(/Array\b/y);
 let VOID_TYPE = token(/void\b/y).map((_)=> new Type.VoidType());
@@ -319,6 +320,13 @@ let blockStatement: Parser<AST.AST> = LEFT_BRACE.and(Parser.zeroOrMore(statement
     RIGHT_BRACE.and(Parser.constant(new AST.Block(statements)))
 );
 
+//threadStatement <- THREAD LEFT_PAREN statement RIGHT_PAREN
+let threadStatement: Parser<AST.AST>  = THREAD.and(
+    blockStatement.bind((body)=>
+            Parser.constant(new AST.Thread(body))
+    )
+)
+
 // optionalTypeAnnotation <- (COLON type)?
 let optionalTypeAnnotation: Parser<Type.Type> = Parser.maybe(COLON.and(type));
 
@@ -367,6 +375,7 @@ let statementParser: Parser<AST.AST> = returnStatement
     .or(assignmentStatement)
     .or(arrayAssignment)
     .or(blockStatement)
+    .or(threadStatement)
     .or(expressionStatement);
 statement.parse = statementParser.parse;
 

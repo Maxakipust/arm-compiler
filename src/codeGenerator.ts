@@ -4,7 +4,17 @@ import * as Type from './type'
 
 export default class CodeGenerator implements Visitor<void> {
     constructor(public locals: Map<String, number> = new Map(), public nextLocalOffset: number = 0, public emit: (data: string)=>void ) {}
-
+    visitThread(node: AST.Thread): void {
+        let threadLabel = new Label();
+        let endThreadLabel = new Label();
+        this.emit(`    bl fork`);
+        this.emit(`    cmp r0, #0`);
+        this.emit(`    bne ${endThreadLabel}`);
+        node.body.visit(this);
+        this.emit(`    ldr r0, =0`);
+        this.emit(`    bl exit`);
+        this.emit(`${endThreadLabel}:`);
+    }
 
     visitNum(node: AST.Num){
         this.emit(`    ldr r0, =${node.value}`);
@@ -160,8 +170,6 @@ export default class CodeGenerator implements Visitor<void> {
             this.emit(`${ifFalseLabel}:`);
             node.alternative.visit(this);
             this.emit(`${endIfLabel}:`);
-        
-    
     }
     visitFunc(node:AST.Func){
             if(node.signature.parameters.length > 4){

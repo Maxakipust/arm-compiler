@@ -8,6 +8,14 @@ export default class TypeChecker implements Visitor<Type.Type> {
         public functions: Map<string, Type.FunctionType>,
         public currentFunctionReturnType: Type.Type | null
     ) {}
+
+    visitThread(node: AST.Thread): Type.Type {
+        node.body.visit(this);
+
+        node.returnType = new Type.ThreadType;
+        return node.returnType;
+    }
+
     visitEmptyArray(node: AST.EmptyArray): Type.Type {
         assertType(new Type.NumberType(), node.size.visit(this));
         node.returnType = new Type.ArrayType(node.type);

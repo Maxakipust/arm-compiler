@@ -453,3 +453,17 @@ export class Length implements AST {
             other.array.equals(this.array);
     }
 }
+
+export class Thread implements AST {
+    constructor(public body: AST){}
+    returnType: Type;
+    visit<T>(v:Visitor<T>): T {
+        return v.visitThread(this);
+    }
+
+    equals(other:AST):boolean {
+        return other instanceof Thread &&
+            other.body.equals(this.body);
+    }
+
+}
