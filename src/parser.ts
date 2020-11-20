@@ -223,7 +223,9 @@ let arrayType: Parser<Type.ArrayType> = ARRAY_TYPE.and(LESS_THAN).and(type).bind
     )
 );
 
-let typeParser: Parser<Type.Type> = VOID_TYPE.or(BOOLEAN_TYPE).or(NUMBER_TYPE).or(THREAD_TYPE).or(arrayType).or(ID.bind((name)=> Parser.constant(new Type.StructType(name))));
+let typeParser: Parser<Type.Type> = VOID_TYPE.or(BOOLEAN_TYPE).or(NUMBER_TYPE).or(THREAD_TYPE).or(arrayType).or(ID.bind((name)=> 
+    Parser.constant(new Type.StructType(name))
+));
 //type <- VOID | BOOLEAN | NUMBER | THREAD_TYPE | arrayType
 type.parse = typeParser.parse;
 
@@ -258,7 +260,7 @@ let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(UNDEFINE
 
 // atom <-call / arrayLiteral / arrayLookup / threadExpression / scalar / LEFT_PAREN expression RIGHT_PAREN
 let atom: Parser<AST.AST> =
-    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(threadExpression).or(scalar).or(memberExpression).or(newExpression).or(LEFT_PAREN.and(expression).bind((e) =>
+    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(threadExpression).or(memberExpression).or(newExpression).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
         RIGHT_PAREN.and(Parser.constant(e))
     ));
 
