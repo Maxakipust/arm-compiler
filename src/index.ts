@@ -24,7 +24,7 @@ globals.set("sleep", new FunctionType([new Param("x0", new NumberType())], new V
 globals.set("printf", new FunctionType([new Param("x0", new ArrayType(new NumberType())), new Param("x1", new NumberType())], new VoidType()));
 
 start = new Date();
-//ast.visit(new TypeChecker(new Map(), globals, new VoidType()))
+ast.visit(new TypeChecker(new Map(), globals, new VoidType()))
 end = new Date();
 console.log(`Type checking finished in ${end.getMilliseconds() - start.getMilliseconds()}ms`);
 

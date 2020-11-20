@@ -111,7 +111,7 @@ function itoa(n: number): Array<number> {
     return ret;
 }
 
-function main(): Thread {
+function main(): number {
     var threads = [101 Thread];
     var i = 0;
     while(i < length(threads)){
