@@ -8,12 +8,15 @@ export default class CodeGenerator implements Visitor<void> {
         let threadLabel = new Label();
         let endThreadLabel = new Label();
         this.emit(`    bl fork`);
+        this.emit(`    push {r0, ip}`);
         this.emit(`    cmp r0, #0`);
         this.emit(`    bne ${endThreadLabel}`);
-        node.body.visit(this);
+        this.emit(`    pop {r0, ip}`);
+        node.body.visit(new CodeGenerator(this.locals, this.nextLocalOffset, this.emit));
         this.emit(`    ldr r0, =0`);
         this.emit(`    bl exit`);
         this.emit(`${endThreadLabel}:`);
+        this.emit(`    pop {r0, ip}`);
     }
 
     visitNum(node: AST.Num){
@@ -94,15 +97,11 @@ export default class CodeGenerator implements Visitor<void> {
         
     }
     visitAdd(node:AST.Add){
-        if(node.left.returnType.equals(new Type.NumberType())){
             node.left.visit(this);
             this.emit(`    push {r0, ip}`);
             node.right.visit(this);
             this.emit(`    pop {r1, ip}`);
             this.emit(`    add r0, r1, r0`);
-        }else if(node.left.returnType instanceof Type.ArrayType) {
-
-        }
     }
     visitSubtract(node:AST.Subtract){
             node.left.visit(this);

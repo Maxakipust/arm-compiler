@@ -123,6 +123,7 @@ let ARRAY_TYPE = token(/Array\b/y);
 let VOID_TYPE = token(/void\b/y).map((_)=> new Type.VoidType());
 let BOOLEAN_TYPE = token(/boolean\b/y).map((_)=> new Type.BooleanType());
 let NUMBER_TYPE = token(/number\b/y).map((_)=> new Type.NumberType());
+let THREAD_TYPE = token(/Thread\b/y).map((_)=> new Type.ThreadType());
 
 let COMMA = token(/[,]/y);
 let SEMICOLON = token(/;/y);
@@ -144,7 +145,7 @@ let boolean: Parser<AST.AST> = TRUE.or(FALSE);
 
 let STRING = token(/".*"/y).map((string)=> new AST.Str(string.substring(1, string.length-1)))
 let CHAR = token(/['].[']/y).map((chars) => new AST.Char(chars.charAt(1)));
-let NUMBER = token(/[0-9]+/y).map((digits) => new AST.Num(parseInt(digits)));
+let NUMBER = token(/[-]?[0-9]+/y).map((digits) => new AST.Num(parseInt(digits)));
 let ID = token(/[a-zA-Z_][a-zA-Z0-9_]*/y);
 let id = ID.map((x) => new AST.Id(x));
 
@@ -204,8 +205,8 @@ let arrayType: Parser<Type.ArrayType> = ARRAY_TYPE.and(LESS_THAN).and(type).bind
     )
 );
 
-let typeParser: Parser<Type.Type> = VOID_TYPE.or(BOOLEAN_TYPE).or(NUMBER_TYPE).or(arrayType);
-//type <- VOID | BOOLEAN | NUMBER | arrayType
+let typeParser: Parser<Type.Type> = VOID_TYPE.or(BOOLEAN_TYPE).or(NUMBER_TYPE).or(THREAD_TYPE.or(arrayType));
+//type <- VOID | BOOLEAN | NUMBER | THREAD_TYPE | arrayType
 type.parse = typeParser.parse;
 
 //arrayLiteral <-  LEFT_BRACKET RIGHT_BRACKET LEFT_BRACE args RIGHT_BRACE
@@ -225,13 +226,21 @@ let emptyArray: Parser<AST.AST> = LEFT_BRACKET.and(expression.bind((size)=>
     )
 ))
 
+let blockStatement: Parser<AST.AST> = Parser.error("block parser used before definition");
+
+//threadExpression <- THREAD LEFT_PAREN statement RIGHT_PAREN
+let threadExpression: Parser<AST.AST>  = THREAD.and(
+    blockStatement.bind((body)=>
+        Parser.constant(new AST.Thread(body))
+    )
+)
 
 //scalar <- boolean / NUMBER / CHAR / UNDEFINED / NULL / id
 let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(UNDEFINED).or(NULL).or(id);
 
-// atom <-call / arrayLiteral / arrayLookup / scalar / LEFT_PAREN expression RIGHT_PAREN
+// atom <-call / arrayLiteral / arrayLookup / threadExpression / scalar / LEFT_PAREN expression RIGHT_PAREN
 let atom: Parser<AST.AST> =
-    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
+    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(threadExpression).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
         RIGHT_PAREN.and(Parser.constant(e))
     ));
 
@@ -316,16 +325,12 @@ LEFT_BRACKET.and(expression.bind((index)=>
 )
 
 // blockStatement <- LEFT_BRACE statement* RIGHT_BRACE
-let blockStatement: Parser<AST.AST> = LEFT_BRACE.and(Parser.zeroOrMore(statement)).bind((statements)=>
+let block: Parser<AST.AST> = LEFT_BRACE.and(Parser.zeroOrMore(statement)).bind((statements)=>
     RIGHT_BRACE.and(Parser.constant(new AST.Block(statements)))
 );
 
-//threadStatement <- THREAD LEFT_PAREN statement RIGHT_PAREN
-let threadStatement: Parser<AST.AST>  = THREAD.and(
-    blockStatement.bind((body)=>
-            Parser.constant(new AST.Thread(body))
-    )
-)
+blockStatement.parse = block.parse;
+
 
 // optionalTypeAnnotation <- (COLON type)?
 let optionalTypeAnnotation: Parser<Type.Type> = Parser.maybe(COLON.and(type));
@@ -375,7 +380,6 @@ let statementParser: Parser<AST.AST> = returnStatement
     .or(assignmentStatement)
     .or(arrayAssignment)
     .or(blockStatement)
-    .or(threadStatement)
     .or(expressionStatement);
 statement.parse = statementParser.parse;
 
