@@ -4,6 +4,12 @@ import * as Type from './type'
 
 export default class CodeGenerator implements Visitor<void> {
     constructor(public locals: Map<String, number> = new Map(), public nextLocalOffset: number = 0, public emit: (data: string)=>void ) {}
+    visitMemberExpression(node: AST.MemberExpression): void {
+        throw new Error('Method not implemented.');
+    }
+    visitStruct(node: AST.Struct): void {
+        
+    }
     visitThread(node: AST.Thread): void {
         let threadLabel = new Label();
         let endThreadLabel = new Label();

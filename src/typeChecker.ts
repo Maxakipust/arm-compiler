@@ -4,10 +4,23 @@ import * as AST from "./ast";
 
 export default class TypeChecker implements Visitor<Type.Type> {
     constructor(
-        public locals: Map<string, Type.Type>,
-        public functions: Map<string, Type.FunctionType>,
-        public currentFunctionReturnType: Type.Type | null
+        public locals: Map<String, Type.Type>,
+        public functions: Map<String, Type.FunctionType>,
+        public currentFunctionReturnType: Type.Type | null,
+        public structs: Map<String, Array<Type.StructEntry>>
     ) {}
+    visitMemberExpression(node: AST.MemberExpression): Type.Type{
+        throw new Error("Method not implemented.");
+    }
+    visitStruct(node: AST.Struct): Type.Type {
+        if(!this.structs.has(node.name)){
+            this.structs.set(node.name, node.values);
+        }else{
+            throw new TypeError(`Struct ${node.name} already exists`);
+        }
+        node.returnType = new Type.VoidType();
+        return node.returnType;
+    }
 
     visitThread(node: AST.Thread): Type.Type {
         node.body.visit(this);
@@ -161,7 +174,8 @@ export default class TypeChecker implements Visitor<Type.Type> {
         let visitor = new TypeChecker(
             params,
             this.functions,
-            node.signature.returnType
+            node.signature.returnType,
+            this.structs
         );
         node.body.visit(visitor);
         node.returnType = new Type.VoidType();

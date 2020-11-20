@@ -33,4 +33,6 @@ export default interface Visitor<T> {
     visitStr(node: AST.Str): T;
     visitEmptyArray(node: AST.EmptyArray): T;
     visitThread(node: AST.Thread): T;
+    visitStruct(node: AST.Struct): T;
+    visitMemberExpression(node: AST.MemberExpression): T;
 }

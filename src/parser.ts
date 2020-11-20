@@ -121,6 +121,7 @@ let WHILE = token(/while\b/y);
 let FOR = token(/for\b/y);
 let THREAD = token(/thread\b/y);
 let STRUCT = token(/struct\b/y);
+let NEW = token(/new\b/y);
 
 let ARRAY_TYPE = token(/Array\b/y);
 let VOID_TYPE = token(/void\b/y).map((_)=> new Type.VoidType());
@@ -137,6 +138,8 @@ let RIGHT_BRACE = token(/[}]/y);
 let LEFT_BRACKET = token(/\[/y)
 let RIGHT_BRACKET = token(/\]/y);
 let COLON = token(/:/y);
+let DOT = token(/[.]/y)
+
 
 let UNDEFINED = token(/undefined\b/y).map((_) => new AST.Undefined())
 let NULL = token(/null\b/y).map((_) => new AST.Null());
@@ -190,6 +193,18 @@ let call: Parser<AST.AST> =
         ))
     );
 
+let memberExpression: Parser<AST.AST> = expression.bind((object)=>
+    DOT.and(ID.bind((property)=>
+        Parser.constant(new AST.MemberExpression(object, property))
+    )
+))
+
+let newExpression: Parser<AST.AST> = NEW.and((ID).bind((name)=>
+    LEFT_PAREN.and((args).bind((args)=>
+        Parser.constant(new AST.New(name, args))
+    ))
+))
+
 //arrayLookup <-ID LEFT_BRACKET expression RIGHT_BRACKET
 let arrayLookup: Parser<AST.AST> = 
     id.bind((array)=>
@@ -208,7 +223,7 @@ let arrayType: Parser<Type.ArrayType> = ARRAY_TYPE.and(LESS_THAN).and(type).bind
     )
 );
 
-let typeParser: Parser<Type.Type> = VOID_TYPE.or(BOOLEAN_TYPE).or(NUMBER_TYPE).or(THREAD_TYPE.or(arrayType));
+let typeParser: Parser<Type.Type> = VOID_TYPE.or(BOOLEAN_TYPE).or(NUMBER_TYPE).or(THREAD_TYPE).or(arrayType).or(ID.bind((name)=> Parser.constant(new Type.StructType(name))));
 //type <- VOID | BOOLEAN | NUMBER | THREAD_TYPE | arrayType
 type.parse = typeParser.parse;
 
@@ -243,7 +258,7 @@ let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(UNDEFINE
 
 // atom <-call / arrayLiteral / arrayLookup / threadExpression / scalar / LEFT_PAREN expression RIGHT_PAREN
 let atom: Parser<AST.AST> =
-    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(threadExpression).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
+    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(threadExpression).or(scalar).or(memberExpression).or(newExpression).or(LEFT_PAREN.and(expression).bind((e) =>
         RIGHT_PAREN.and(Parser.constant(e))
     ));
 

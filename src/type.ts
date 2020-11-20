@@ -81,6 +81,16 @@ export class ThreadType implements Type {
     }
 }
 
+export class StructType implements Type{
+    constructor(public name: String) {}
+    equals(other:Type):boolean {
+        return other instanceof StructType;
+    }
+    toString(): string {
+        return `Struct<${name}>`;
+    }
+}
+
 export class StructEntry{
     constructor(public name: String, public type: Type){};
 
@@ -91,22 +101,5 @@ export class StructEntry{
 
     toString(): String{
         return `${name}: ${this.type.toString()}`
-    }
-}
-
-export class StructType implements Type{
-    constructor(public entries: Array<StructEntry>){}
-    equals(other: Type): boolean {
-        if(!(other instanceof StructType) || (this.entries.length != other.entries.length)){
-            return false;
-        }
-        
-        return this.entries.every((entry:StructEntry, index:number)=>entry.equals(other.entries[index]));
-    }
-    toString(): string {
-        return (
-`struct ${name} {
-    ${this.entries.map((entry)=>entry.toString(), []).join(',\n')}
-}`);
     }
 }

@@ -1,1 +1,14 @@
-struct test{test1: number, test1: number}
+struct Test{
+    a: number,
+    b: number
+}
+
+function testFn(p1: Test): void {
+    putchar(p1.a);
+    putchar(p1.b);
+}
+
+function main(): number{
+    var x = new Test(48, 49);
+    testFn(x);
+}
