@@ -1,8 +1,9 @@
 import fs, { write } from "fs"
-import parser from './parser'
+import parser, { structStatement } from './parser'
 import { FunctionType, NumberType, Param, VoidType, ThreadType, ArrayType } from "./type";
 import TypeChecker from './typeChecker'
 import CodeGenerator from './codeGenerator'
+import * as AST from './ast';
 let globalStart = new Date();
 
 let filePath = process.argv[2];
@@ -18,6 +19,11 @@ let end = new Date();
 console.log(`Parsing finished in ${end.getMilliseconds() - start.getMilliseconds()}ms`);
 
 let globals = new Map<string, FunctionType>();
+ast.statements.forEach((statement)=>{
+    if(statement instanceof AST.Func){
+        globals.set(statement.name, statement.signature)
+    }
+});
 globals.set("putchar", new FunctionType([new Param("x0", new NumberType())], new VoidType()));
 globals.set("waitpid", new FunctionType([new Param("x0", new ThreadType()), new Param("x1", new NumberType()), new Param("x2", new NumberType())], new VoidType()));
 globals.set("sleep", new FunctionType([new Param("x0", new NumberType())], new VoidType()));

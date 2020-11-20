@@ -1,4 +1,4 @@
-import { FunctionType, Type } from "./type";
+import { FunctionType, StructEntry, Type } from "./type";
 import Visitor from "./visitor";
 
 export interface AST {
@@ -464,6 +464,17 @@ export class Thread implements AST {
     equals(other:AST):boolean {
         return other instanceof Thread &&
             other.body.equals(this.body);
+    }
+}
+
+export class Struct implements AST {
+    constructor(public name: String, public values: Array<StructEntry>){}
+    returnType: Type;
+    visit<T>(v: Visitor<T>): T {
+        throw new Error("Method not implemented.");
+    }
+    equals(other: AST): boolean {
+        throw new Error("Method not implemented.");
     }
 
 }

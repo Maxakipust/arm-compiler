@@ -5,7 +5,9 @@ class Parser<T> {
     constructor(public parse: (source: Source) => (ParseResult<T> | null)) { }
 
     static regexp(regexp: RegExp): Parser<string> {
-        return new Parser(source => source.match(regexp));
+        return new Parser(source => {
+            return source.match(regexp)
+        });
     }
 
     static constant<U extends any | null>(value: U): Parser<U> {
@@ -118,6 +120,7 @@ let VAR = token(/var\b/y);
 let WHILE = token(/while\b/y);
 let FOR = token(/for\b/y);
 let THREAD = token(/thread\b/y);
+let STRUCT = token(/struct\b/y);
 
 let ARRAY_TYPE = token(/Array\b/y);
 let VOID_TYPE = token(/void\b/y).map((_)=> new Type.VoidType());
@@ -284,6 +287,7 @@ let returnStatement: Parser<AST.AST> = RETURN.and(Parser.maybe(expression)).bind
 // expressionStatement <- expression SEMICOLON
 let expressionStatement: Parser<AST.AST> = expression.bind((term)=> SEMICOLON.and(Parser.constant(term)));
 
+
 // ifStatement <- IF LEFT_PAREN expression RIGHT_PAREN statement ELSE statement
 let ifStatement: Parser<AST.AST> = IF.and(LEFT_PAREN).and(expression).bind((conditional)=>
     RIGHT_PAREN.and(statement).bind((consequence)=>
@@ -299,8 +303,6 @@ let whileStatement: Parser<AST.AST> = WHILE.and(LEFT_PAREN).and(expression).bind
         Parser.constant(new AST.While(conditional, body))
     )
 );
-
-
 
 // varStatement <- VAR ID ASSIGN expression SEMICOLON
 let varStatement: Parser<AST.AST> = VAR.and(ID).bind((name)=>
@@ -362,6 +364,24 @@ let functionStatement: Parser<AST.AST> = FUNCTION.and(ID).bind((name)=>
     )
 )
 
+let structItem: Parser<Type.StructEntry> = ID.bind((paramName)=>
+    COLON.and(type.bind((type)=>
+            Parser.constant(new Type.StructEntry(paramName, type))
+    ))
+)
+
+let structItems: Parser<Array<Type.StructEntry>> = structItem.bind((sItem)=>
+    Parser.zeroOrMore(COMMA.and(structItem)).bind((sItems)=>
+        Parser.constant([sItem, ...sItems])
+    )
+);
+
+export let structStatement: Parser<AST.AST> = STRUCT.and(ID.bind((structName)=>
+    LEFT_BRACE.and((structItems).bind((items)=>
+            RIGHT_BRACE.and(Parser.constant(new AST.Struct(structName, items)))
+    ))
+));
+
 // statement <- returnStatement
 //            / ifStatement
 //            / whileStatement
@@ -372,7 +392,8 @@ let functionStatement: Parser<AST.AST> = FUNCTION.and(ID).bind((name)=>
 //            / expressionStatement
 //            / forStatement
 
-let statementParser: Parser<AST.AST> = returnStatement
+let statementParser: Parser<AST.AST> = structStatement
+    .or(returnStatement)
     .or(functionStatement)
     .or(ifStatement)
     .or(whileStatement)
@@ -383,8 +404,8 @@ let statementParser: Parser<AST.AST> = returnStatement
     .or(expressionStatement);
 statement.parse = statementParser.parse;
 
-let parser: Parser<AST.AST> =
-    ignored.and(Parser.zeroOrMore(functionStatement)).map((statements)=>
+let parser: Parser<AST.Block> =
+    ignored.and(Parser.zeroOrMore(functionStatement.or(structStatement))).map((statements)=>
         new AST.Block(statements)
     );
 export default parser;
