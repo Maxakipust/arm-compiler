@@ -41,7 +41,7 @@ end = new Date();
 console.log(`Type checking finished in ${end.getMilliseconds() - start.getMilliseconds()}ms`);
 
 start = new Date();
-ast.visit(new CodeGenerator(new Map(), 0, emit));
+ast.visit(new CodeGenerator(new Map(), structs, 0, emit));
 end = new Date();
 console.log(`Code generation finished in ${end.getMilliseconds() - start.getMilliseconds()}ms`);
 

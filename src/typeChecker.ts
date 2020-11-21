@@ -36,6 +36,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
                 let struct = this.structs.get(type.name);
                 let retType = struct.find((entry)=>entry.name === node.property.value);
                 if(type != undefined){
+                    node.struct = struct;
                     node.returnType = retType.type;
                     return node.returnType;
                 }else{

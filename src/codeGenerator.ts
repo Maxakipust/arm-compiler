@@ -3,13 +3,18 @@ import * as AST from './ast'
 import * as Type from './type'
 
 export default class CodeGenerator implements Visitor<void> {
-    constructor(public locals: Map<String, number> = new Map(), public nextLocalOffset: number = 0, public emit: (data: string)=>void ) {}
+    constructor(
+        public locals: Map<String, number> = new Map(),
+        public structs: Map<String, Array<Type.StructEntry>>,
+        public nextLocalOffset: number = 0,
+        public emit: (data: string)=>void
+    ) {}
     visitNew(node: AST.New): void {
         let length = node.args.length;
         // malloc new memory for struct 4 * number of args
         this.emit(`    ldr r0, =${4 * (length)}`);
-        this.emit(`    b malloc`);
-        this.emit(`    puch {r0, ip}`);
+        this.emit(`    bl malloc`);
+        this.emit(`    push {r0, ip}`);
 
         node.args.forEach((arg, index)=>{
             // visit each arg - result goes to r0
@@ -25,7 +30,18 @@ export default class CodeGenerator implements Visitor<void> {
         this.emit(`    pop {r0, ip}`);
     }
     visitMemberExpression(node: AST.MemberExpression): void {
-        throw new Error('Method not implemented.');
+        // get the value of the variable
+        let offset = this.locals.get(node.object.value);
+        if(offset){
+            this.emit(`    ldr r0, [fp, #${offset}]`);
+            // look for the offset
+            let index = node.struct.findIndex((entry)=>entry.name === node.property.value);
+            // look in memory of the value of the variable + offset
+            // load into r0
+            this.emit(`    ldr r0, [r0, #${index * 4}]`);
+        }else{
+            throw Error(`Undefined variable ${node.object.value}`);
+        }
     }
     visitStruct(node: AST.Struct): void {
         
@@ -38,7 +54,7 @@ export default class CodeGenerator implements Visitor<void> {
         this.emit(`    cmp r0, #0`);
         this.emit(`    bne ${endThreadLabel}`);
         this.emit(`    pop {r0, ip}`);
-        node.body.visit(new CodeGenerator(this.locals, this.nextLocalOffset, this.emit));
+        node.body.visit(new CodeGenerator(this.locals, this.structs, this.nextLocalOffset, this.emit));
         this.emit(`    ldr r0, =0`);
         this.emit(`    bl exit`);
         this.emit(`${endThreadLabel}:`);
@@ -214,7 +230,7 @@ export default class CodeGenerator implements Visitor<void> {
         node.signature.parameters.forEach((parameter, i) => {
             locals.set(parameter.name, 4 * i - 16);
         });
-        return new CodeGenerator(locals, -20, this.emit);
+        return new CodeGenerator(locals, this.structs, -20, this.emit);
     }
 
     emitPrologue(){

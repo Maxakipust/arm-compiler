@@ -491,7 +491,7 @@ export class MemberExpression implements AST {
             other.property.equals(this.property);
     }
     returnType: Type;
-    
+    struct: Array<StructEntry>;
 }
 
 export class New implements AST {

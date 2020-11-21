@@ -1,27 +1,27 @@
-struct Test1{
+struct A{
+    a: B,
+    b: B
+}
+
+struct B {
     a: number,
     b: number
 }
 
-struct Test2{
-    a: Array<number>,
-    b: Test1
+function printA(param: A){
+    var f = param.a;
+    var s = param.b;
+    putchar(f.a + 48);
+    putchar(f.b + 48);
+    putchar(10);
+    putchar(s.a + 48);
+    putchar(s.b + 48);
+    putchar(10);
 }
 
-function testFn1(p1: Test1): void {
-    putchar(p1.a);
-    putchar(p1.b);
-}
-
-function testFn2(p1: Test2): void {
-    testFn1(p1.b);
-    var a = p1.a;
-    putchar(a[0]);
-}
-
-function main(): number{
-    var x = new Test1(48, 49);
-    var x2 = new Test2([]{1, 2, 3}, x);
-    testFn1(x);
-    testFn2(x2);
+function main():number {
+    var nums1 = new B(1, 2);
+    var nums2 = new B(3, 4);
+    var a = new A(nums1, nums2);
+    printA(a);
 }
