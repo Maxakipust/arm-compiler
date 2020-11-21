@@ -29,6 +29,21 @@ export default class CodeGenerator implements Visitor<void> {
         // put pointer for memory into r0
         this.emit(`    pop {r0, ip}`);
     }
+    
+    visitMemberAssignment(node: AST.MemberAssignment): void {
+        let offset = this.locals.get(node.object.value);
+        if(offset){
+            this.emit(`    ldr r0, [fp, #${offset}]`);
+            this.emit(`    push {r0, ip}`);
+            let index = node.struct.findIndex((entry)=>entry.name === node.property.value);
+            node.value.visit(this);
+            this.emit(`    pop {r1, ip}`);
+            this.emit(`    str r0, [r1, #${index * 4}]`);
+        }else{
+            throw Error(`Undefined variable ${node.object.value}`);
+        }
+    }
+
     visitMemberExpression(node: AST.MemberExpression): void {
         // get the value of the variable
         let offset = this.locals.get(node.object.value);

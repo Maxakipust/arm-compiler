@@ -12,9 +12,11 @@ function printA(param: A): void{
     var f = param.a;
     var s = param.b;
     putchar(f.a + 48);
+    putchar(',');
     putchar(f.b + 48);
     putchar(10);
     putchar(s.a + 48);
+    putchar(',');
     putchar(s.b + 48);
     putchar(10);
 }
@@ -23,5 +25,7 @@ function main():number {
     var nums1 = new B(1, 2);
     var nums2 = new B(3, 4);
     var a = new A(nums1, nums2);
+    printA(a);
+    nums1.a = 5;
     printA(a);
 }

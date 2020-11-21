@@ -494,6 +494,23 @@ export class MemberExpression implements AST {
     struct: Array<StructEntry>;
 }
 
+export class MemberAssignment implements AST {
+    constructor(public object: Id, public property: Id, public value: AST){}
+    returnType: Type;
+    struct: Array<StructEntry>;
+    visit<T>(v: Visitor<T>): T {
+        return v.visitMemberAssignment(this);
+    }
+    equals(other: AST): boolean {
+        return other instanceof MemberAssignment  && 
+            this.object.equals(other.object) &&
+            this.property.equals(other.property) &&
+            this.value.equals(other.value) &&
+            this.returnType.equals(other.returnType);
+    }
+    
+}
+
 export class New implements AST {
     constructor(public name: Id, public args: Array<AST>) {}
     returnType: Type;

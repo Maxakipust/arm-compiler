@@ -36,4 +36,5 @@ export default interface Visitor<T> {
     visitStruct(node: AST.Struct): T;
     visitMemberExpression(node: AST.MemberExpression): T;
     visitNew(node: AST.New): T;
+    visitMemberAssignment(node: AST.MemberAssignment): T;
 }

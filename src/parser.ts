@@ -118,7 +118,6 @@ let ELSE = token(/else\b/y);
 let RETURN = token(/return\b/y);
 let VAR = token(/var\b/y);
 let WHILE = token(/while\b/y);
-let FOR = token(/for\b/y);
 let THREAD = token(/thread\b/y);
 let STRUCT = token(/struct\b/y);
 let NEW = token(/new\b/y);
@@ -335,6 +334,14 @@ let assignmentStatement: Parser<AST.AST> = ID.bind((name)=>
     )
 )
 
+let memberAssignemnt: Parser<AST.AST> = id.bind((object)=>
+    DOT.and(id.bind((property)=>
+        ASSIGN.and(expression).bind((value)=>
+            SEMICOLON.and(Parser.constant(new AST.MemberAssignment(object, property, value)))
+        )
+    ))
+)
+
 let arrayAssignment: Parser<AST.AST> = id.bind((array)=>
 LEFT_BRACKET.and(expression.bind((index)=>
     RIGHT_BRACKET.and(ASSIGN).and(expression).bind((value)=>
@@ -417,6 +424,7 @@ let statementParser: Parser<AST.AST> = structStatement
     .or(varStatement)
     .or(assignmentStatement)
     .or(arrayAssignment)
+    .or(memberAssignemnt)
     .or(blockStatement)
     .or(expressionStatement);
 statement.parse = statementParser.parse;

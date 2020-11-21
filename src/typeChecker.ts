@@ -29,6 +29,25 @@ export default class TypeChecker implements Visitor<Type.Type> {
         }
     }
 
+    visitMemberAssignment(node: AST.MemberAssignment): Type.Type {
+        let type = this.locals.get(node.object.value)
+        if(type instanceof Type.StructType){
+            if(this.structs.has(type.name)){
+                let struct = this.structs.get(type.name);
+                node.struct = struct;
+                let expectedType = struct.find((entry)=>entry.name === node.property.value).type;
+                let gotType = node.value.visit(this);
+                assertType(expectedType, gotType);
+                node.returnType = new Type.VoidType();
+                return node.returnType;
+            }else{
+                throw new TypeError(`Struct ${node.object.value} is not defined`);
+            }
+        }else{
+            throw new TypeError(`${node.object.value} is not a struct`);
+        }
+    }
+
     visitMemberExpression(node: AST.MemberExpression): Type.Type{
         let type = this.locals.get(node.object.value);
         if(type instanceof Type.StructType){
