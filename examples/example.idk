@@ -8,7 +8,7 @@ struct B {
     b: number
 }
 
-function printA(param: A){
+function printA(param: A): void{
     var f = param.a;
     var s = param.b;
     putchar(f.a + 48);
