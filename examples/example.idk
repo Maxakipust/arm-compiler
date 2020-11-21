@@ -1,14 +1,27 @@
-struct Test{
+struct Test1{
     a: number,
     b: number
 }
 
-function testFn(p1: Test): void {
+struct Test2{
+    a: Array<number>,
+    b: Test1
+}
+
+function testFn1(p1: Test1): void {
     putchar(p1.a);
     putchar(p1.b);
 }
 
+function testFn2(p1: Test2): void {
+    testFn1(p1.b);
+    var a = p1.a;
+    putchar(a[0]);
+}
+
 function main(): number{
-    var x = new Test(48, 49);
-    testFn(x);
+    var x = new Test1(48, 49);
+    var x2 = new Test2([]{1, 2, 3}, x);
+    testFn1(x);
+    testFn2(x2);
 }

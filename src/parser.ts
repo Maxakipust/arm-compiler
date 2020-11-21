@@ -193,15 +193,15 @@ let call: Parser<AST.AST> =
         ))
     );
 
-let memberExpression: Parser<AST.AST> = expression.bind((object)=>
-    DOT.and(ID.bind((property)=>
+let memberExpression: Parser<AST.AST> = id.bind((object)=>
+    DOT.and(id.bind((property)=>
         Parser.constant(new AST.MemberExpression(object, property))
     )
 ))
 
-let newExpression: Parser<AST.AST> = NEW.and((ID).bind((name)=>
+let newExpression: Parser<AST.AST> = NEW.and((id).bind((name)=>
     LEFT_PAREN.and((args).bind((args)=>
-        Parser.constant(new AST.New(name, args))
+        RIGHT_PAREN.and(Parser.constant(new AST.New(name, args)))
     ))
 ))
 
@@ -260,7 +260,7 @@ let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(UNDEFINE
 
 // atom <-call / arrayLiteral / arrayLookup / threadExpression / scalar / LEFT_PAREN expression RIGHT_PAREN
 let atom: Parser<AST.AST> =
-    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(threadExpression).or(memberExpression).or(newExpression).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
+    call.or(arrayLiteral).or(emptyArray).or(arrayLookup).or(threadExpression).or(newExpression).or(memberExpression).or(scalar).or(LEFT_PAREN.and(expression).bind((e) =>
         RIGHT_PAREN.and(Parser.constant(e))
     ));
 

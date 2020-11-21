@@ -22,9 +22,12 @@ let globals = new Map<String, FunctionType>();
 let structs = new Map<String, Array<StructEntry>>();
 ast.statements.forEach((statement)=>{
     if(statement instanceof AST.Func){
-        globals.set(statement.name, statement.signature)
+        globals.set(statement.name, statement.signature);
     }else if(statement instanceof AST.Struct){
-        structs.set(statement.name, statement.values)
+        if(structs.has(statement.name)){
+            throw new TypeError(`Struct ${statement.name} already exists`);
+        }
+        structs.set(statement.name, statement.values);
     }
 });
 globals.set("putchar", new FunctionType([new Param("x0", new NumberType())], new VoidType()));

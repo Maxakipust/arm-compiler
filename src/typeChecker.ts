@@ -9,15 +9,46 @@ export default class TypeChecker implements Visitor<Type.Type> {
         public currentFunctionReturnType: Type.Type | null,
         public structs: Map<String, Array<Type.StructEntry>>
     ) {}
+
+    visitNew(node: AST.New): Type.Type {
+        if(this.structs.has(node.name.value)){
+            let struct = this.structs.get(node.name.value);
+            if(struct.length == node.args.length){
+                node.args.forEach((arg, index)=>{
+                    let argType = arg.visit(this);
+                    assertType(struct[index].type, argType);
+                })
+            }else{
+                throw new TypeError(`Expected ${struct.length} params but got ${node.args.length}`);
+            }
+
+            node.returnType = new Type.StructType(node.name.value);
+            return node.returnType;
+        }else{
+            throw new TypeError(`Struct ${node.name.value} is not defined`);
+        }
+    }
+
     visitMemberExpression(node: AST.MemberExpression): Type.Type{
-        throw new Error("Method not implemented.");
+        let type = this.locals.get(node.object.value);
+        if(type instanceof Type.StructType){
+            if(this.structs.has(type.name)){
+                let struct = this.structs.get(type.name);
+                let retType = struct.find((entry)=>entry.name === node.property.value);
+                if(type != undefined){
+                    node.returnType = retType.type;
+                    return node.returnType;
+                }else{
+                    throw new TypeError(`Unable to find property ${node.property.value} on ${type.name}`);
+                }
+            }else{
+                throw new TypeError(`Struct ${node.object.value} is not defined`);
+            }
+        }else{
+            throw new TypeError(`${node.object.value} is not a struct`);
+        }
     }
     visitStruct(node: AST.Struct): Type.Type {
-        if(!this.structs.has(node.name)){
-            this.structs.set(node.name, node.values);
-        }else{
-            throw new TypeError(`Struct ${node.name} already exists`);
-        }
         node.returnType = new Type.VoidType();
         return node.returnType;
     }

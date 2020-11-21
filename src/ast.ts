@@ -481,27 +481,29 @@ export class Struct implements AST {
 }
 
 export class MemberExpression implements AST {
-    constructor(public object:AST, public property: String){}
+    constructor(public object:Id, public property: Id){}
     visit<T>(v: Visitor<T>): T {
         return v.visitMemberExpression(this);
     }
     equals(other: AST): boolean {
         return other instanceof MemberExpression &&
             other.object.equals(this.object) &&
-            other.property === this.property;
+            other.property.equals(this.property);
     }
     returnType: Type;
     
 }
 
 export class New implements AST {
-    constructor(public name: String, public args: Array<AST>) {}
+    constructor(public name: Id, public args: Array<AST>) {}
     returnType: Type;
     visit<T>(v: Visitor<T>): T {
-        throw new Error("Method not implemented.");
+        return v.visitNew(this);
     }
     equals(other: AST): boolean {
-        throw new Error("Method not implemented.");
+        return other instanceof New &&
+            other.args.every((arg, index)=>arg.equals(this.args[index])) &&
+            other.name.equals(this.name);
     }
     
 }

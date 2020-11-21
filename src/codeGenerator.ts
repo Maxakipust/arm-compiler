@@ -4,6 +4,26 @@ import * as Type from './type'
 
 export default class CodeGenerator implements Visitor<void> {
     constructor(public locals: Map<String, number> = new Map(), public nextLocalOffset: number = 0, public emit: (data: string)=>void ) {}
+    visitNew(node: AST.New): void {
+        let length = node.args.length;
+        // malloc new memory for struct 4 * number of args
+        this.emit(`    ldr r0, =${4 * (length)}`);
+        this.emit(`    b malloc`);
+        this.emit(`    puch {r0, ip}`);
+
+        node.args.forEach((arg, index)=>{
+            // visit each arg - result goes to r0
+            arg.visit(this);
+
+            // put r0 into memory loc w/ offset of index * 4
+            this.emit(`    pop {r1, ip}`);
+            this.emit(`    str r0, [r1, #${index * 4}]`);
+            this.emit(`    push {r1, ip}`);
+        })
+
+        // put pointer for memory into r0
+        this.emit(`    pop {r0, ip}`);
+    }
     visitMemberExpression(node: AST.MemberExpression): void {
         throw new Error('Method not implemented.');
     }
@@ -84,109 +104,109 @@ export default class CodeGenerator implements Visitor<void> {
         this.emit(`    movgt r0, #0`);
     }
     visitEqual(node:AST.Equal){
-            node.left.visit(this);
-            this.emit(`    push {r0, ip}`);
-            node.right.visit(this);
-            this.emit(`    pop {r1, ip}`);
-            this.emit(`    cmp r1, r0`);
-            this.emit(`    moveq r0, #1`);
-            this.emit(`    movne r0, #0`);
+        node.left.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.right.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    cmp r1, r0`);
+        this.emit(`    moveq r0, #1`);
+        this.emit(`    movne r0, #0`);
     }
     visitNotEqual(node: AST.NotEqual){
-            node.left.visit(this);
-            this.emit(`    push {r0, ip}`);
-            node.right.visit(this);
-            this.emit(`    pop {r1, ip}`);
-            this.emit(`    cmp r1, r0`);
-            this.emit(`    moveq r0, #0`);
-            this.emit(`    movne r0, #1`);
+        node.left.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.right.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    cmp r1, r0`);
+        this.emit(`    moveq r0, #0`);
+        this.emit(`    movne r0, #1`);
         
     }
     visitAdd(node:AST.Add){
-            node.left.visit(this);
-            this.emit(`    push {r0, ip}`);
-            node.right.visit(this);
-            this.emit(`    pop {r1, ip}`);
-            this.emit(`    add r0, r1, r0`);
+        node.left.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.right.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    add r0, r1, r0`);
     }
     visitSubtract(node:AST.Subtract){
-            node.left.visit(this);
-            this.emit(`    push {r0, ip}`);
-            node.right.visit(this);
-            this.emit(`    pop {r1, ip}`);
-            this.emit(`    sub r0, r1, r0`);
+        node.left.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.right.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    sub r0, r1, r0`);
         
     }
     visitMultiply(node:AST.Multiply){
-            node.left.visit(this);
-            this.emit(`    push {r0, ip}`);
-            node.right.visit(this);
-            this.emit(`    pop {r1, ip}`);
-            this.emit(`    mul r0, r1, r0`);
+        node.left.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.right.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    mul r0, r1, r0`);
     }
     visitDivide(node:AST.Divide){
-            node.left.visit(this);
-            this.emit(`    push {r0, ip}`);
-            node.right.visit(this);
-            this.emit(`    pop {r1, ip}`);
-            this.emit(`    udiv r0, r1, r0`);
+        node.left.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.right.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    udiv r0, r1, r0`);
         
     }
     visitCall(node:AST.Call){
-            let count = node.args.length;
-            if(count === 0){
-                this.emit(`    bl ${node.callee}`);
-            }else if(count === 1) {
-                node.args[0].visit(this);
-                this.emit(`    bl ${node.callee}`);
-            }else if(count >= 2 && count <= 4){
-                this.emit(`    sub sp, sp, #16`);
-                node.args.forEach((arg, i) => {
-                    arg.visit(this);
-                    this.emit(`    str r0, [sp, #${4*i}]`);
-                });
-                this.emit(`    pop {r0, r1, r2, r3}`);
-                this.emit(`    bl ${node.callee}`);
-            }else{
-                throw Error("More than 4 arguments are not supported");
-            }
+        let count = node.args.length;
+        if(count === 0){
+            this.emit(`    bl ${node.callee}`);
+        }else if(count === 1) {
+            node.args[0].visit(this);
+            this.emit(`    bl ${node.callee}`);
+        }else if(count >= 2 && count <= 4){
+            this.emit(`    sub sp, sp, #16`);
+            node.args.forEach((arg, i) => {
+                arg.visit(this);
+                this.emit(`    str r0, [sp, #${4*i}]`);
+            });
+            this.emit(`    pop {r0, r1, r2, r3}`);
+            this.emit(`    bl ${node.callee}`);
+        }else{
+            throw Error("More than 4 arguments are not supported");
+        }
         
     }
     visitReturn(node:AST.Return){
-            node.term.visit(this);
-            this.emit(`    mov sp, fp`);
-            this.emit(`    pop {fp, pc}`);
+        node.term.visit(this);
+        this.emit(`    mov sp, fp`);
+        this.emit(`    pop {fp, pc}`);
         
     }
     visitBlock(node:AST.Block){
-            node.statements.forEach((statement)=>
-                statement.visit(this)
-            );
+        node.statements.forEach((statement)=>
+            statement.visit(this)
+        );
         
     }
     visitIf(node:AST.If){
-            let ifFalseLabel = new Label();
-            let endIfLabel = new Label();
-            node.conditional.visit(this);
-            this.emit(`    cmp r0, #0`);
-            this.emit(`    beq ${ifFalseLabel}`);
-            node.consequence.visit(this);
-            this.emit(`    b ${endIfLabel}`);
-            this.emit(`${ifFalseLabel}:`);
-            node.alternative.visit(this);
-            this.emit(`${endIfLabel}:`);
+        let ifFalseLabel = new Label();
+        let endIfLabel = new Label();
+        node.conditional.visit(this);
+        this.emit(`    cmp r0, #0`);
+        this.emit(`    beq ${ifFalseLabel}`);
+        node.consequence.visit(this);
+        this.emit(`    b ${endIfLabel}`);
+        this.emit(`${ifFalseLabel}:`);
+        node.alternative.visit(this);
+        this.emit(`${endIfLabel}:`);
     }
     visitFunc(node:AST.Func){
-            if(node.signature.parameters.length > 4){
-                throw Error("More than 4 params is not supported");
-            }
-            this.emit(``);
-            this.emit(`.global ${node.name}`);
-            this.emit(`${node.name}:`);
-            this.emitPrologue();
-            let visitor = this.setUpEnvironment(node);
-            node.body.visit(visitor);
-            this.emitEpilogue();
+        if(node.signature.parameters.length > 4){
+            throw Error("More than 4 params is not supported");
+        }
+        this.emit(``);
+        this.emit(`.global ${node.name}`);
+        this.emit(`${node.name}:`);
+        this.emitPrologue();
+        let visitor = this.setUpEnvironment(node);
+        node.body.visit(visitor);
+        this.emitEpilogue();
     }
 
     setUpEnvironment(node: AST.Func){
@@ -217,14 +237,13 @@ export default class CodeGenerator implements Visitor<void> {
         
     }
     visitAssign(node:AST.Assign){
-            node.value.visit(this);
-            let offset = this.locals.get(node.name);
-            if(offset){
-                this.emit(`    str r0, [fp, #${offset}]`);
-            }else{
-                throw Error(`Undefined variable: ${node.name}`);
-            }
-        
+        node.value.visit(this);
+        let offset = this.locals.get(node.name);
+        if(offset){
+            this.emit(`    str r0, [fp, #${offset}]`);
+        }else{
+            throw Error(`Undefined variable: ${node.name}`);
+        }
     }
     visitWhile(node:AST.While){
             let loopStart = new Label();
@@ -240,34 +259,32 @@ export default class CodeGenerator implements Visitor<void> {
         
     }
     visitBoolean(node:AST.Bool){
-            if(node.value) {
-                this.emit(`    mov r0, #1`);
-            }else{
-                this.emit(`    mov r0, #0`);
-            }
+        if(node.value) {
+            this.emit(`    mov r0, #1`);
+        }else{
+            this.emit(`    mov r0, #0`);
+        }
     }
     visitUndefined(node:AST.Undefined){
-            this.emit(`    mov r0, #0`);
-        
+        this.emit(`    mov r0, #0`);
     }
     visitNull(node:AST.Null){
-            this.emit(`    mov r0, #0`);
-        
+        this.emit(`    mov r0, #0`);
     }
     visitArrayLiteral(node: AST.ArrayLiteral){
-            let length = node.elements.length;
-            this.emit(`    ldr r0, =${4 * (length + 1)}`); //put the size of the array in bytes into r0
-            this.emit(`    bl malloc`); // malloc the array, the pointer goes into r0
-            this.emit(`    push {r4, ip}`); // save r4
-            this.emit(`    mov r4, r0`); // move the pointer for the array into r4
-            this.emit(`    ldr r0, =${length}`); //load the length of the array into r0
-            this.emit(`    str r0, [r4]`); // store the length of the array into the memory location of r4
-            node.elements.forEach((element, i ) => {
-                element.visit(this); // load the value of each element into r0
-                this.emit(`    str r0, [r4, #${4 * (i + 1)}]`); // store r0 into r4 + offset
-            });
-            this.emit(`    mov r0, r4`); //move the pointer for the array into r0
-            this.emit(`    pop {r4, ip}`); //restore r4
+        let length = node.elements.length;
+        this.emit(`    ldr r0, =${4 * (length + 1)}`); //put the size of the array in bytes into r0
+        this.emit(`    bl malloc`); // malloc the array, the pointer goes into r0
+        this.emit(`    push {r4, ip}`); // save r4
+        this.emit(`    mov r4, r0`); // move the pointer for the array into r4
+        this.emit(`    ldr r0, =${length}`); //load the length of the array into r0
+        this.emit(`    str r0, [r4]`); // store the length of the array into the memory location of r4
+        node.elements.forEach((element, i ) => {
+            element.visit(this); // load the value of each element into r0
+            this.emit(`    str r0, [r4, #${4 * (i + 1)}]`); // store r0 into r4 + offset
+        });
+        this.emit(`    mov r0, r4`); //move the pointer for the array into r0
+        this.emit(`    pop {r4, ip}`); //restore r4
     }
 
     visitEmptyArray(node: AST.EmptyArray): void {
@@ -307,21 +324,20 @@ export default class CodeGenerator implements Visitor<void> {
     }
 
     visitArrayLookup(node: AST.ArrayLookup){
-            node.array.visit(this);
-            this.emit(`    push {r0, ip}`);
-            node.index.visit(this);
-            this.emit(`    pop {r1, ip}`);
-            this.emit(`    ldr r2, [r1]`);
-            this.emit(`    cmp r0, r2`);
-            this.emit(`    movhs r0, #0`);
-            this.emit(`    addlo r1, r1, #4`);
-            this.emit(`    lsllo r0, r0, #2`);
-            this.emit(`    ldrlo r0, [r1, r0]`);
-        
+        node.array.visit(this);
+        this.emit(`    push {r0, ip}`);
+        node.index.visit(this);
+        this.emit(`    pop {r1, ip}`);
+        this.emit(`    ldr r2, [r1]`);
+        this.emit(`    cmp r0, r2`);
+        this.emit(`    movhs r0, #0`);
+        this.emit(`    addlo r1, r1, #4`);
+        this.emit(`    lsllo r0, r0, #2`);
+        this.emit(`    ldrlo r0, [r1, r0]`);
     }
     visitLength(node: AST.Length){
-            node.array.visit(this);
-            this.emit(`    ldr r0, [r0, #0]`);
+        node.array.visit(this);
+        this.emit(`    ldr r0, [r0, #0]`);
     }
     visitStr(node: AST.Str) {
         let length = node.value.length;
