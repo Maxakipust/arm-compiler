@@ -22,6 +22,9 @@ let globals = new Map<String, FunctionType>();
 let structs = new Map<String, Array<StructEntry>>();
 ast.statements.forEach((statement)=>{
     if(statement instanceof AST.Func){
+        if(globals.has(statement.name)){
+            throw new TypeError(`Function ${statement.name} already exists`);
+        }
         globals.set(statement.name, statement.signature);
     }else if(statement instanceof AST.Struct){
         if(structs.has(statement.name)){

@@ -524,3 +524,15 @@ export class New implements AST {
     }
     
 }
+
+export class Include implements AST {
+    constructor(public file: Str){}
+    returnType: Type;
+    visit<T>(v: Visitor<T>): T {
+        return v.visitInclude(this);
+    }
+    equals(other: AST): boolean {
+        return other instanceof Include &&
+            other.file === this.file;
+    }
+}

@@ -1,31 +1,56 @@
-struct A{
-    a: B,
-    b: B
+include("examples/stdlib.idk")
+
+struct Count {
+    number: number,
+    prime: boolean
 }
 
-struct B {
-    a: number,
-    b: number
+function printCount(count: Count): void{
+    print(itoa(count.number));
+    print(": ");
+    if(count.prime){
+        printLn("Prime");
+    }else{
+        printLn("Not Prime");
+    }
 }
 
-function printA(param: A): void{
-    var f = param.a;
-    var s = param.b;
-    putchar(f.a + 48);
-    putchar(',');
-    putchar(f.b + 48);
-    putchar(10);
-    putchar(s.a + 48);
-    putchar(',');
-    putchar(s.b + 48);
-    putchar(10);
+function isPrime(num: Count): void {
+    var i = 2;
+    while(i<num.number){ 
+        if(mod(num.number, i) == 0) {
+            num.prime = false;
+            return;
+        }
+        i = i + 1;
+    }
+    num.prime = (num.number > 1);
+}
+
+function wait(thread: Thread): void{
+    waitpid(thread, 0, 0);
 }
 
 function main():number {
-    var nums1 = new B(1, 2);
-    var nums2 = new B(3, 4);
-    var a = new A(nums1, nums2);
-    printA(a);
-    nums1.a = 5;
-    printA(a);
+    var i = 0;
+    var c = new Count(0, false);
+    var threads = [100 Thread];
+
+
+    while(i < length(threads)){
+        threads[i] = thread{
+            c = new Count(i, false);
+            isPrime(c);
+            printCount(c);
+        };
+        i = i + 1;
+    }
+    i =0;
+    while(i<length(threads)){
+        wait(threads[i]);
+        i = i + 1;
+    }
+    
+
+    return 0;
 }

@@ -9,6 +9,9 @@ export default class TypeChecker implements Visitor<Type.Type> {
         public currentFunctionReturnType: Type.Type | null,
         public structs: Map<String, Array<Type.StructEntry>>
     ) {}
+    visitInclude(node: AST.Include): Type.Type {
+        return new Type.VoidType();
+    }
 
     visitNew(node: AST.New): Type.Type {
         if(this.structs.has(node.name.value)){
@@ -19,13 +22,13 @@ export default class TypeChecker implements Visitor<Type.Type> {
                     assertType(struct[index].type, argType);
                 })
             }else{
-                throw new TypeError(`Expected ${struct.length} params but got ${node.args.length}`);
+                // throw new TypeError(`Expected ${struct.length} params but got ${node.args.length}`);
             }
 
             node.returnType = new Type.StructType(node.name.value);
             return node.returnType;
         }else{
-            throw new TypeError(`Struct ${node.name.value} is not defined`);
+            // throw new TypeError(`Struct ${node.name.value} is not defined`);
         }
     }
 
@@ -41,10 +44,10 @@ export default class TypeChecker implements Visitor<Type.Type> {
                 node.returnType = new Type.VoidType();
                 return node.returnType;
             }else{
-                throw new TypeError(`Struct ${node.object.value} is not defined`);
+                // throw new TypeError(`Struct ${node.object.value} is not defined`);
             }
         }else{
-            throw new TypeError(`${node.object.value} is not a struct`);
+            // throw new TypeError(`${node.object.value} is not a struct`);
         }
     }
 
@@ -59,13 +62,13 @@ export default class TypeChecker implements Visitor<Type.Type> {
                     node.returnType = retType.type;
                     return node.returnType;
                 }else{
-                    throw new TypeError(`Unable to find property ${node.property.value} on ${type.name}`);
+                    // throw new TypeError(`Unable to find property ${node.property.value} on ${type.name}`);
                 }
             }else{
-                throw new TypeError(`Struct ${node.object.value} is not defined`);
+                // throw new TypeError(`Struct ${node.object.value} is not defined`);
             }
         }else{
-            throw new TypeError(`${node.object.value} is not a struct`);
+            // throw new TypeError(`${node.object.value} is not a struct`);
         }
     }
     visitStruct(node: AST.Struct): Type.Type {
@@ -104,7 +107,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
     visitId(node: AST.Id): Type.Type {
         let type = this.locals.get(node.value);
         if(!type){
-            throw TypeError(`Undefined variable ${node.value}`);
+            // throw TypeError(`Undefined variable ${node.value}`);
         }
         node.returnType = type;
         return type;
@@ -157,7 +160,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
         let rightType = node.left.visit(this)
         assertType(leftType, rightType);
         if(! (leftType.equals(new Type.NumberType) || leftType instanceof Type.ArrayType)){
-            throw(TypeError(`Expected number or Array, but got ${leftType}`));
+            // throw(TypeError(`Expected number or Array, but got ${leftType}`));
         }
         node.returnType = leftType;
         return leftType;
@@ -183,7 +186,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
     visitCall(node: AST.Call): Type.Type {
         let expected = this.functions.get(node.callee);
         if(!expected){
-            throw TypeError(`Function ${node.callee} is not defined`);
+            // throw TypeError(`Function ${node.callee} is not defined`);
         }
         let argsTypes = new Array<Type.Param>();
         node.args.forEach((arg, i)=>
@@ -201,7 +204,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
             node.returnType = new Type.VoidType();
             return node.returnType;
         }else{
-            throw TypeError("Encountered return statement outside any function");
+            // throw TypeError("Encountered return statement outside any function");
         }
     }
     visitBlock(node: AST.Block): Type.Type {
@@ -241,7 +244,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
     visitAssign(node: AST.Assign): Type.Type {
         let variableType = this.locals.get(node.name);
         if(!variableType){
-            throw TypeError(`Assignment to an undefined variable ${node.name}`);
+            // throw TypeError(`Assignment to an undefined variable ${node.name}`);
         }
         let valueType = node.value.visit(this);
         assertType(variableType, valueType);
@@ -268,7 +271,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
     }
     visitArrayLiteral(node: AST.ArrayLiteral): Type.Type {
         if(node.elements.length == 0){
-            throw TypeError("Can't infer type of an empty array");
+            // throw TypeError("Can't infer type of an empty array");
         }
         let types = node.elements.map((element)=> element.visit(this));
         let elementType = types.reduce((prev, next)=>{
@@ -285,7 +288,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
             node.returnType = type.element;
             return type.element;
         }else{
-            throw TypeError(`Expected an array, but got ${type}`);
+            // throw TypeError(`Expected an array, but got ${type}`);
         }
     }
     visitLength(node: AST.Length): Type.Type {
@@ -294,7 +297,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
             node.returnType = new Type.NumberType();
             return node.returnType;
         }else{
-            throw TypeError(`Expected an array, but got ${type}`);
+            // throw TypeError(`Expected an array, but got ${type}`);
         }
     }
 
@@ -306,6 +309,6 @@ export default class TypeChecker implements Visitor<Type.Type> {
 
 function assertType(expected: Type.Type, got: Type.Type){
     if(!expected.equals(got)){
-        throw(TypeError(`Expected ${expected}, but got ${got}`));
+        // throw(TypeError(`Expected ${expected}, but got ${got}`));
     }
 }

@@ -9,6 +9,9 @@ export default class CodeGenerator implements Visitor<void> {
         public nextLocalOffset: number = 0,
         public emit: (data: string)=>void
     ) {}
+    visitInclude(node: AST.Include): void {
+        
+    }
     visitNew(node: AST.New): void {
         let length = node.args.length;
         // malloc new memory for struct 4 * number of args

@@ -87,7 +87,7 @@ export class StructType implements Type{
         return other instanceof StructType;
     }
     toString(): string {
-        return `Struct<${name}>`;
+        return `Struct<${this.name}>`;
     }
 }
 

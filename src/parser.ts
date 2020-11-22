@@ -1,5 +1,6 @@
 import * as AST from "./ast";
 import * as Type from "./type";
+import fs from "fs"
 
 class Parser<T> {
     constructor(public parse: (source: Source) => (ParseResult<T> | null)) { }
@@ -121,6 +122,7 @@ let WHILE = token(/while\b/y);
 let THREAD = token(/thread\b/y);
 let STRUCT = token(/struct\b/y);
 let NEW = token(/new\b/y);
+let INCLUDE = token(/include\b/y);
 
 let ARRAY_TYPE = token(/Array\b/y);
 let VOID_TYPE = token(/void\b/y).map((_)=> new Type.VoidType());
@@ -418,7 +420,6 @@ export let structStatement: Parser<AST.AST> = STRUCT.and(ID.bind((structName)=>
 
 let statementParser: Parser<AST.AST> = structStatement
     .or(returnStatement)
-    .or(functionStatement)
     .or(ifStatement)
     .or(whileStatement)
     .or(varStatement)
@@ -429,8 +430,19 @@ let statementParser: Parser<AST.AST> = structStatement
     .or(expressionStatement);
 statement.parse = statementParser.parse;
 
+let include: Parser<AST.Block> = INCLUDE.and(LEFT_PAREN).and(STRING.bind((file) =>
+    RIGHT_PAREN.and(Parser.constant(
+        parser.parseStringToCompletion(fs.readFileSync(file.value, "utf-8"))
+    ))
+));
+
 let parser: Parser<AST.Block> =
-    ignored.and(Parser.zeroOrMore(functionStatement.or(structStatement))).map((statements)=>
-        new AST.Block(statements)
-    );
+    ignored.and(Parser.zeroOrMore(include).bind((includes)=>
+        Parser.zeroOrMore(functionStatement.or(structStatement)).map((statements)=>{
+        includes.reverse().forEach((include)=>
+            statements = include.statements.concat(statements)
+        )
+        return new AST.Block(statements)
+        })
+    ));
 export default parser;
