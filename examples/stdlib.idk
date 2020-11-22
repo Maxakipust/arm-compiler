@@ -32,29 +32,37 @@ function reverse(s: Array<number>): void {
 }  
 
 function itoa(n: number): Array<number> {
-    var i = 0;
+    var ret = [0 number];
     var sign = n;
-    var ret = [100 number];
 
     if( n<0 ){
-        n = n - ( 2 * n );
+        n = n * (0-1);
     }
 
-    ret[i] = mod(n, 10);
-    ret[i] = ret[i] + '0';
-    i = i + 1;
+    ret = arrayAdd(ret, mod(n, 10) + '0');
+
 
     while(n / 10 > 0){
         n = n / 10;
-        ret[i] = mod(n, 10) + '0';
-        i = i + 1;
+        ret = arrayAdd(ret, mod(n, 10) + '0');
     }
 
     if(sign < 0){
-        ret[i] = '-';
-        i = i + 1;
+        ret = arrayAdd(ret, '-');
     }
-    ret[i] = 0;
+    ret = arrayAdd(ret, 0);
     reverse(ret);
     return ret;
+}
+
+function arrayAdd(arr: Array<number>, num: number):Array<number>{
+    var newArr = [(length(arr)+1) number];
+    var index = 0;
+    while(index < length(arr)){
+        newArr[index] = arr[index];
+        index = index + 1;
+    }
+    newArr[length(newArr) - 1] = num;
+
+    return newArr;
 }

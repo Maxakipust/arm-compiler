@@ -36,7 +36,6 @@ function main():number {
     var c = new Count(0, false);
     var threads = [100 Thread];
 
-
     while(i < length(threads)){
         threads[i] = thread{
             c = new Count(i, false);
