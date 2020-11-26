@@ -1,0 +1,28 @@
+struct Node{
+    next: Node,
+    value: Number,
+    hasNext: Boolean
+}
+
+function append(node: Node, num: Number): Void{
+    while(node.hasNext){
+        node = node.next;
+    }
+    var newNode = new Node(Null, num, false);
+    node.next = newNode;
+    node.hasNext = true;
+}
+
+function fromArray(numbers: Array<Number>): Node{
+    if(length(numbers) == 0){
+        return new Node(Null, 0, false);
+    }
+
+    var n = new Node(Null, numbers[0], false);
+    var index = 1;
+    while(index < length(numbers)){
+        append(n, numbers[index]);
+        index = index + 1;
+    }
+    return n;
+}

@@ -266,7 +266,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
         return node.returnType;
     }
     visitNull(node: AST.Null): Type.Type {
-        node.returnType = new Type.VoidType();
+        node.returnType = new Type.Any();
         return node.returnType;
     }
     visitArrayLiteral(node: AST.ArrayLiteral): Type.Type {
@@ -308,6 +308,10 @@ export default class TypeChecker implements Visitor<Type.Type> {
 }
 
 function assertType(expected: Type.Type, got: Type.Type){
+    if(expected instanceof Type.Any || got instanceof Type.Any){
+        return true;
+    }
+
     if(!expected.equals(got)){
         throw(TypeError(`Expected ${expected}, but got ${got}`));
     }

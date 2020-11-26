@@ -103,3 +103,15 @@ export class StructEntry{
         return `${name}: ${this.type.toString()}`
     }
 }
+
+export class Any implements Type{
+    constructor() {}
+    equals(other: Type): boolean {
+        return true;
+    }
+
+    toString(): string {
+        return `Any`;
+    }
+ 
+}

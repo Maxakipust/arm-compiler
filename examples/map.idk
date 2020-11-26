@@ -1,0 +1,14 @@
+
+function hashString(str: Array<Number>): Number {
+    var p = 31;
+    var m = 1000000009;
+    var hashValue = 0;
+    var pPow = 1;
+    var index = 0;
+    while(index < length(str)){
+        hashValue = mod(hashValue + (str[index] - 'a' + 1) * pPow, m);
+        pPow = mod(pPow * p, m);
+        index = index + 1;
+    }
+    return hashValue;
+}

@@ -125,9 +125,9 @@ let NEW = token(/new\b/y);
 let INCLUDE = token(/include\b/y);
 
 let ARRAY_TYPE = token(/Array\b/y);
-let VOID_TYPE = token(/void\b/y).map((_)=> new Type.VoidType());
-let BOOLEAN_TYPE = token(/boolean\b/y).map((_)=> new Type.BooleanType());
-let NUMBER_TYPE = token(/number\b/y).map((_)=> new Type.NumberType());
+let VOID_TYPE = token(/Void\b/y).map((_)=> new Type.VoidType());
+let BOOLEAN_TYPE = token(/Boolean\b/y).map((_)=> new Type.BooleanType());
+let NUMBER_TYPE = token(/Number\b/y).map((_)=> new Type.NumberType());
 let THREAD_TYPE = token(/Thread\b/y).map((_)=> new Type.ThreadType());
 
 let COMMA = token(/[,]/y);
@@ -141,9 +141,7 @@ let RIGHT_BRACKET = token(/\]/y);
 let COLON = token(/:/y);
 let DOT = token(/[.]/y)
 
-
-let UNDEFINED = token(/undefined\b/y).map((_) => new AST.Undefined())
-let NULL = token(/null\b/y).map((_) => new AST.Null());
+let NULL = token(/Null\b/y).map((_) => new AST.Null());
 
 
 let TRUE = token(/true\b/y).map((_)=> new AST.Bool(true));
@@ -256,8 +254,8 @@ let threadExpression: Parser<AST.AST>  = THREAD.and(
     )
 )
 
-//scalar <- boolean / NUMBER / CHAR / UNDEFINED / NULL / id
-let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(UNDEFINED).or(NULL).or(id);
+//scalar <- boolean / NUMBER / CHAR / NULL / id
+let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(NULL).or(id);
 
 // atom <-call / arrayLiteral / arrayLookup / threadExpression / scalar / LEFT_PAREN expression RIGHT_PAREN
 let atom: Parser<AST.AST> =
