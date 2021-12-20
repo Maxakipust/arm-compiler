@@ -1,36 +1,24 @@
 include("examples/stdlib.idk")
 
-struct Count {
-    number: number,
-    prime: boolean
-}
-
-function printCount(count: Count): void{
-    print(itoa(count.number));
-    print(": ");
-    if(count.prime){
-        printLn("Prime");
-    }else{
-        printLn("Not Prime");
-    }
-}
-
-function isPrime(num: Count): void {
+function isPrime(num: number): boolean {
     var i = 2;
-    while(i<num.number){ 
-        if(mod(num.number, i) == 0) {
-            num.prime = false;
-            return;
+    while(i<num){ 
+        if(mod(num, i) == 0) {
+            return false;
         }
         i = i + 1;
     }
-    num.prime = (num.number > 1);
+    if(num > 1){
+        return true;
+    }
+    return false;
 }
 
 function wait(thread: Thread): void{
     waitpid(thread, 0, 0);
 }
 
+/*
 function main():number {
     var i = 0;
     var c = new Count(0, false);
@@ -52,4 +40,28 @@ function main():number {
     
 
     return 0;
+}
+*/
+
+function threadFn():void {
+    print("Thread running");
+}
+
+function main():number {
+    var i = 0;
+    var threads = [100 Thread];
+    var results = [100 boolean];
+
+    while(i < length(threads)){
+        threads[i] = thread{threadFn};
+        i = i + 1;
+    }
+    i = 0;
+    while(i<length(threads)){
+        wait(threads[i]);
+        print(itoa(i));
+        printBool(results[i]);
+        putchar(10);
+        i = i + 1;
+    }
 }

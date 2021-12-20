@@ -250,11 +250,26 @@ let emptyArray: Parser<AST.AST> = LEFT_BRACKET.and(expression.bind((size)=>
 let blockStatement: Parser<AST.AST> = Parser.error("block parser used before definition");
 
 //threadExpression <- THREAD LEFT_PAREN statement RIGHT_PAREN
-let threadExpression: Parser<AST.AST>  = THREAD.and(
-    blockStatement.bind((body)=>
-        Parser.constant(new AST.Thread(body))
-    )
-)
+
+// ID.bind((callee) =>
+// LEFT_PAREN.and(args.bind((args) =>
+//     RIGHT_PAREN.and(Parser.constant(
+//         callee === "length"
+//         ? new AST.Length(args[0])
+//         : new AST.Call(callee, args)
+//     ))
+// ))
+// );
+
+let threadExpression: Parser<AST.AST>  = 
+    THREAD
+    .and(LEFT_BRACE)
+    .and(ID.bind((fn) => 
+        RIGHT_BRACE.and(
+            Parser.constant(new AST.Thread(fn))
+        )
+    ))
+
 
 //scalar <- boolean / NUMBER / CHAR / UNDEFINED / NULL / id
 let scalar: Parser<AST.AST> = boolean.or(NUMBER).or(CHAR).or(STRING).or(UNDEFINED).or(NULL).or(id);

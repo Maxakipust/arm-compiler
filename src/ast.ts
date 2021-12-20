@@ -455,7 +455,7 @@ export class Length implements AST {
 }
 
 export class Thread implements AST {
-    constructor(public body: AST){}
+    constructor(public fn: string){}
     returnType: Type;
     visit<T>(v:Visitor<T>): T {
         return v.visitThread(this);
@@ -463,7 +463,7 @@ export class Thread implements AST {
 
     equals(other:AST):boolean {
         return other instanceof Thread &&
-            other.body.equals(this.body);
+            (other.fn == this.fn);
     }
 }
 

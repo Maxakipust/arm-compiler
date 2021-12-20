@@ -7,7 +7,8 @@ export default class CodeGenerator implements Visitor<void> {
         public locals: Map<String, number> = new Map(),
         public structs: Map<String, Array<Type.StructEntry>>,
         public nextLocalOffset: number = 0,
-        public emit: (data: string)=>void
+        public emit: (data: string)=>void,
+        public nextfn: Array<[Label, AST.AST]> = []
     ) {}
     visitInclude(node: AST.Include): void {
         
@@ -65,18 +66,43 @@ export default class CodeGenerator implements Visitor<void> {
         
     }
     visitThread(node: AST.Thread): void {
-        let threadLabel = new Label();
-        let endThreadLabel = new Label();
-        this.emit(`    bl fork`);
-        this.emit(`    push {r0, ip}`);
-        this.emit(`    cmp r0, #0`);
-        this.emit(`    bne ${endThreadLabel}`);
-        this.emit(`    pop {r0, ip}`);
-        node.body.visit(new CodeGenerator(this.locals, this.structs, this.nextLocalOffset, this.emit));
+
         this.emit(`    ldr r0, =0`);
-        this.emit(`    bl exit`);
-        this.emit(`${endThreadLabel}:`);
-        this.emit(`    pop {r0, ip}`);
+        this.emit(`    push {r0, ip}`);
+        this.locals.set(`Thread${this.locals.size}`, this.nextLocalOffset -4);
+        this.nextLocalOffset -= 8;
+        this.emit(`    ldr r1, =0`);
+        this.emit(`    ldr r2, ${node.fn}`)
+        this.emit(`    ldr r3, =0`);
+        this.emit(`    bl pthread_create`)
+
+        let offset = this.locals.get(`Thread${this.locals.size}`);
+        this.emit(`    ldr r0, [fp, #${offset}]`);
+        
+        // let bodyLabel = new Label()
+        // this.nextfn.push([bodyLabel, node.body]);
+
+        // this.emit(`    set r0, #0`)
+        // this.locals.set(`thread${this.locals.size}`, this.nextLocalOffset -4);
+        // this.nextLocalOffset -= 8;
+
+        // this.emit(`    mov r1, #0`)
+        // this.emit(`    mov r3, #0`)
+
+        
+
+
+        // let endThreadLabel = new Label();
+        // this.emit(`    bl fork`);
+        // this.emit(`    push {r0, ip}`);
+        // this.emit(`    cmp r0, #0`);
+        // this.emit(`    bne ${endThreadLabel}`);
+        // this.emit(`    pop {r0, ip}`);
+        // node.body.visit(new CodeGenerator(this.locals, this.structs, this.nextLocalOffset, this.emit));
+        // this.emit(`    ldr r0, =0`);
+        // this.emit(`    bl exit`);
+        // this.emit(`${endThreadLabel}:`);
+        // this.emit(`    pop {r0, ip}`);
     }
 
     visitNum(node: AST.Num){
@@ -268,7 +294,6 @@ export default class CodeGenerator implements Visitor<void> {
             this.emit(`    push {r0, ip}`);
             this.locals.set(node.name, this.nextLocalOffset -4);
             this.nextLocalOffset -= 8;
-        
     }
     visitAssign(node:AST.Assign){
         node.value.visit(this);

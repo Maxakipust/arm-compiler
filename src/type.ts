@@ -95,11 +95,11 @@ export class StructEntry{
     constructor(public name: String, public type: Type){};
 
     equals(other: StructEntry){
-        return other.name === name &&
+        return other.name === this.name &&
             other.type.equals(this.type);
     }
 
     toString(): String{
-        return `${name}: ${this.type.toString()}`
+        return `${this.name}: ${this.type.toString()}`
     }
 }

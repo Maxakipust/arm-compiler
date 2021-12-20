@@ -1,6 +1,7 @@
 import Visitor from "./visitor";
 import * as Type from './type';
 import * as AST from "./ast";
+import { type } from "os";
 
 export default class TypeChecker implements Visitor<Type.Type> {
     constructor(
@@ -77,10 +78,16 @@ export default class TypeChecker implements Visitor<Type.Type> {
     }
 
     visitThread(node: AST.Thread): Type.Type {
-        node.body.visit(this);
+        let expected = this.functions.get(node.fn);
+        if(!expected){
+            throw TypeError(`Function ${node.fn} is not defined`);
+        }
+        if(expected.parameters.length > 0){
+            throw TypeError(`Threads cannot have parameters`);
+        }
+        assertType(expected.returnType, new Type.VoidType());
 
-        node.returnType = new Type.ThreadType;
-        return node.returnType;
+        return new Type.ThreadType();
     }
 
     visitEmptyArray(node: AST.EmptyArray): Type.Type {

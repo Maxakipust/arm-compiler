@@ -66,3 +66,18 @@ function arrayAdd(arr: Array<number>, num: number):Array<number>{
 
     return newArr;
 }
+
+function printBool(bool:boolean): void{
+    if(bool){
+        putchar('t');
+        putchar('r');
+        putchar('u');
+        putchar('e');
+        return;
+    }
+    putchar('f');
+    putchar('a');
+    putchar('l');
+    putchar('s');
+    putchar('e');
+}
