@@ -71,6 +71,7 @@ export default class CodeGenerator implements Visitor<void> {
         this.emit(`    push {r0, ip}`);
         let threadName = `Thread${this.locals.size}`
         this.locals.set(threadName, this.nextLocalOffset -4);
+        this.emit(`    ldr r0, [fp, #${this.locals.get(threadName)}]`);
         this.nextLocalOffset -= 8;
         this.emit(`    ldr r1, =0`);
         this.emit(`    ldr r2, =${node.fn}`)

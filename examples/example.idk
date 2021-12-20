@@ -48,7 +48,7 @@ function threadFn():void {
 }
 
 function main():number {
-    var threads = [10 Thread];
+    var threads = [1 Thread];
     var i = 0;
     while(i<length(threads)){
         threads[i] = thread{threadFn};
