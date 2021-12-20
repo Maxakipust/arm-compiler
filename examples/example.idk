@@ -48,5 +48,5 @@ function threadFn():void {
 }
 
 function main():number {
-    var thread = thread{threadFn}
+    var thread = thread{threadFn};
 }
