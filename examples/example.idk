@@ -49,9 +49,10 @@ function threadFn():void {
 }
 
 function main():number {
-    print("before thread");
+    print("before thread\n");
     var thread = thread{threadFn};
-    print("mid thread");
+    print("mid thread\n");
+    sleep(5);
     wait(thread);
-    print("after thread");
+    print("after thread\n");
 }
