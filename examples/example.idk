@@ -44,11 +44,14 @@ function main():number {
 */
 
 function threadFn():void {
+    sleep(1);
     print("Thread running");
 }
 
 function main():number {
+    print("before thread");
     var thread = thread{threadFn};
-    sleep(5);
+    print("mid thread");
     wait(thread);
+    print("after thread");
 }
