@@ -72,7 +72,7 @@ export default class CodeGenerator implements Visitor<void> {
         this.locals.set(`Thread${this.locals.size}`, this.nextLocalOffset -4);
         this.nextLocalOffset -= 8;
         this.emit(`    ldr r1, =0`);
-        this.emit(`    ldr r2, ${node.fn}`)
+        this.emit(`    ldr r2, =${node.fn}`)
         this.emit(`    ldr r3, =0`);
         this.emit(`    bl pthread_create`)
 
