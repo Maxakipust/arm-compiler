@@ -38,4 +38,5 @@ export default interface Visitor<T> {
     visitNew(node: AST.New): T;
     visitMemberAssignment(node: AST.MemberAssignment): T;
     visitInclude(node: AST.Include): T;
+    visitWait(node: AST.Wait): T;
 }

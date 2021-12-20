@@ -49,4 +49,5 @@ function threadFn():void {
 
 function main():number {
     var thread = thread{threadFn};
+    wait(thread);
 }

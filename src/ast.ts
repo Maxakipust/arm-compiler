@@ -467,6 +467,19 @@ export class Thread implements AST {
     }
 }
 
+export class Wait implements AST {
+    constructor(public thr: AST){}
+    returnType: Type;
+    visit<T>(v:Visitor<T>): T {
+        return v.visitWait(this);
+    }
+
+    equals(other:AST):boolean {
+        return other instanceof Wait &&
+            (other.thr.equals(this.thr));
+    }
+}
+
 export class Struct implements AST {
     constructor(public name: String, public values: Array<StructEntry>){}
     returnType: Type;

@@ -10,6 +10,7 @@ export default class TypeChecker implements Visitor<Type.Type> {
         public currentFunctionReturnType: Type.Type | null,
         public structs: Map<String, Array<Type.StructEntry>>
     ) {}
+    
     visitInclude(node: AST.Include): Type.Type {
         return new Type.VoidType();
     }
@@ -88,6 +89,16 @@ export default class TypeChecker implements Visitor<Type.Type> {
         assertType(expected.returnType, new Type.VoidType());
 
         return new Type.ThreadType();
+    }
+
+    visitWait(node: AST.Wait): Type.Type {
+        let type = node.thr.visit(this);
+        if(type instanceof Type.ThreadType){
+            node.returnType = new Type.VoidType();
+            return node.returnType;
+        }else{
+            throw TypeError(`Expected an Thread, but got ${type}`);
+        }
     }
 
     visitEmptyArray(node: AST.EmptyArray): Type.Type {

@@ -183,13 +183,16 @@ let args: Parser<Array<AST.AST>> =
             )
     ).or(Parser.constant([]));
 // call <- ID LEFT_PAREN args RIGHT_PAREN
+
 let call: Parser<AST.AST> =
     ID.bind((callee) =>
         LEFT_PAREN.and(args.bind((args) =>
             RIGHT_PAREN.and(Parser.constant(
                 callee === "length"
                 ? new AST.Length(args[0])
-                : new AST.Call(callee, args)
+                : (callee === "wait" 
+                ? new AST.Wait(args[0])
+                : new AST.Call(callee, args))
             ))
         ))
     );
