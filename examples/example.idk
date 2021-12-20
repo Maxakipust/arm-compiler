@@ -45,7 +45,7 @@ function main():number {
 
 function threadFn():void {
     sleep(1);
-    print("Thread running");
+    printLn("Thread running");
 }
 
 function main():number {
